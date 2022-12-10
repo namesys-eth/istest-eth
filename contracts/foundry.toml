@@ -1,0 +1,12 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib']
+
+# Enables or disables the optimizer
+optimizer = true
+
+# The number of optimizer runs
+optimizer_runs = 6666
+gas_reports = ["*"]
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
