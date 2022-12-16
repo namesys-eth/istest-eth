@@ -1,10 +1,8 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity > 0.8 .0 < 0.9 .0;
 
-import "src/Interface.sol";
-
 /**
- * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs/BENSYC)
+ * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs)
  * @title WLNR Base
  */
 contract Resolver {
