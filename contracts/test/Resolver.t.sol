@@ -3,6 +3,7 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "src/Resolver.sol";
+
 interface iOverloadResolver {
     function addr(bytes32 node, uint256 coinType) external view returns(bytes memory);
 }
@@ -15,16 +16,22 @@ interface iResolver {
     function name(bytes32 node) external view returns(string memory);
 }
 
+/**
+ * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs/BENSYC)
+ * @title WLNR Base
+ */
 contract ResolverTest is Test {
     error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
     error RequestError(bytes32 expected, bytes32 result, bytes extradata, uint blknum, bytes response);
-
+  
     Resolver public ccip;
 
+    /// @dev : setup
     function setUp() public {
         ccip = new Resolver();
     }
 
+    /// @dev : DNS encoder
     function DNSEncode(bytes memory _domain) internal pure returns(bytes memory _name, bytes32 _namehash) {
         uint i = _domain.length;
         _name = abi.encodePacked(bytes1(0));
@@ -46,15 +53,16 @@ contract ResolverTest is Test {
         }
     }
 
-    function testSetup() public {
+    /// @dev : test DNS Encoder
+    function testDNSEncoder() public {
         bytes memory _src = "virgil.eth";
         (bytes memory _name, bytes32 _namehash) = DNSEncode(_src);
         assertEq(_name, bytes.concat(bytes1(uint8(6)), "virgil", bytes1(uint8(3)), "eth", bytes1(0)));
         assertEq(_namehash, bytes32(0x2abe74dc42b79fff0accc104dbf6ef6f150d5eb4ba14cdae4a404eb7890d2e19));
     }
 
-
-    function testDecoderEncoder() public {
+    /// @dev : test DNS Encode + Decode
+    function testDNSEncodeDecode() public {
         bytes memory _test = "virgil.istest.eth";
         (bytes memory _name, bytes32 _namehash) = DNSEncode(_test);
         assertEq(_name, bytes.concat(bytes1(uint8(6)), "virgil", bytes1(uint8(6)), "istest", bytes1(uint8(3)), "eth", bytes1(0)));
@@ -65,10 +73,11 @@ contract ResolverTest is Test {
         assertEq(_namehash2, bytes32(0x2abe74dc42b79fff0accc104dbf6ef6f150d5eb4ba14cdae4a404eb7890d2e19));
     }
 
+    /// @dev : test if 36-byte call reverts [?]
     function testRevertLen36() public {
         bytes memory _src = "virgil.istest.eth";
-        (bytes memory _srcName, bytes32 _srcNamehash) = DNSEncode(_src);
-        (, bytes32 _dstNamehash) = ccip.DNSDecode(_srcName);
+        (bytes memory _srcName, bytes32 _srcHash) = DNSEncode(_src);
+        (, bytes32 _digestHash) = ccip.DNSDecode(_srcName);
         string[] memory _gateways = new string[](1);
         _gateways[0] = 'https://goerli.namesys.xyz/virgil.eth/{data}';
         vm.expectRevert(
@@ -78,34 +87,35 @@ contract ResolverTest is Test {
                 _gateways,
                 abi.encodeWithSelector(
                     iResolver.addr.selector, 
-                    _dstNamehash
+                    _digestHash
                 ),
                 Resolver.__callback.selector,
                 abi.encode( // callback extradata
                     block.number,
-                    _dstNamehash,
+                    _digestHash,
                     keccak256(
                         abi.encodePacked(
                             blockhash(block.number - 1), 
-                            _dstNamehash, 
+                            _digestHash, 
                             address(this)
                         )
                     )
                 )
             )
         );
-        ccip.resolve(_srcName, abi.encodeWithSelector(iResolver.addr.selector, _srcNamehash));
+        ccip.resolve(_srcName, abi.encodeWithSelector(iResolver.addr.selector, _srcHash));
     }
     
-    function testSignature1() public {
+    /// @dev : test signature
+    function testSignature() public {
         uint PrivateKey = 0xc0de4c0ffeee;
         address _coffee = vm.addr(PrivateKey);
         console.log(_coffee);
         assertTrue(ccip.isSigner(_coffee));
 
         bytes memory _src = "virgil.istest.eth";
-        (bytes memory _srcName, bytes32 _srcNamehash) = DNSEncode(_src);
-        (, bytes32 _dstNamehash) = ccip.DNSDecode(_srcName);
+        (bytes memory _srcName, bytes32 _srcHash) = DNSEncode(_src);
+        (, bytes32 _digestHash) = ccip.DNSDecode(_srcName);
         string[] memory _gateways = new string[](1);
         _gateways[0] = 'https://goerli.namesys.xyz/virgil.eth/{data}';
         bytes memory _extradata;
@@ -116,30 +126,30 @@ contract ResolverTest is Test {
                 _gateways,
                 abi.encodeWithSelector(
                     iResolver.addr.selector, 
-                    _dstNamehash
+                    _digestHash
                 ),
                 Resolver.__callback.selector,
                 _extradata = abi.encode( // callback extradata
                     block.number,
-                    _dstNamehash,
+                    _digestHash,
                     keccak256(
                         abi.encodePacked(
                             blockhash(block.number - 1), 
-                            _dstNamehash, 
+                            _digestHash, 
                             address(this)
                         )
                     )
                 )
             )
         );
-        ccip.resolve(_srcName, abi.encodeWithSelector(iResolver.addr.selector, _srcNamehash));
+        ccip.resolve(_srcName, abi.encodeWithSelector(iResolver.addr.selector, _srcHash));
         bytes memory _result = abi.encode(address(0xc0De4c0FFEEC0dE4C0FfeEC0de4c0fFeec0ffee0));
         bytes32 _digest = keccak256(
                     abi.encodePacked(
                         hex"1900",
                         address(ccip),
                         uint64(block.timestamp + 42),
-                        _dstNamehash,
+                        _digestHash,
                         _result
                     )
                 );
@@ -153,7 +163,7 @@ contract ResolverTest is Test {
         assertEq(
             ccip.__callback(
                 abi.encodePacked(
-                    _dstNamehash,
+                    _digestHash,
                     _calldata
                 ),
                 extradata),

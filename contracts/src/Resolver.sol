@@ -1,30 +1,46 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity > 0.8 .0 < 0.9 .0;
 
+import "src/Interface.sol";
+
 /**
  * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs/BENSYC)
  * @title WLNR Base
  */
-contract ResolverIsTest {
+contract Resolver {
 
     address public Dev;
-    error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
+    iENS public ENS;
+
+    /// @dev : Error events
     error RequestError();
     error InvalidSignature();
+    error InvalidHash();
+    error SignatureExpired();
+    error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
 
+    /// @dev : Gateway struct
     struct Gate {
         string domain;
         address operator;
     }
-
     Gate[] public Gateways;
     mapping(address => bool) public isSigner;
+
+    /**
+     * @dev Constructor
+     */
     constructor() {
         Gateways.push(Gate("goerli.namesys.xyz", 0xA0896ab9606EA2CF884549030Ddc960A11b1e630)); // set initial gateway addr here
         isSigner[0xA0896ab9606EA2CF884549030Ddc960A11b1e630] = true;
+        ENS = iENS(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e);
     }
 
-    function DNSDecode(bytes calldata name) public pure returns(string memory gName, bytes32 _namehash) {
+    /**
+     * @dev DNSDecode() function for web2 CCIP middleware
+     * @param name : name to resolve
+     */
+    function DNSDecode(bytes calldata name) public pure returns(string memory gname, bytes32 _namehash) {
         uint j;
         uint len;
         bytes[] memory labels = new bytes[](12); // max 11 ...sub.sub.domain.eth
@@ -33,37 +49,46 @@ contract ResolverIsTest {
             labels[j] = name[i: i += len];
             j++;
         }
-        gName = string(labels[--j]); //.eth
+        gname = string(labels[--j]); //.eth
         _namehash = keccak256(abi.encodePacked(bytes32(0), keccak256(labels[j--]))); //.eth
-        if (j == 0) // isTest.eth
+        if (j == 0) // istest.eth
             return (
-                string.concat(string(labels[0]), ".", gName),
+                string.concat(string(labels[0]), ".", gname),
                 keccak256(abi.encodePacked(_namehash, keccak256(labels[0])))
             );
 
         while (j > 0) {
-            gName = string.concat(string(labels[--j]), ".", gName);
+            gname = string.concat(string(labels[--j]), ".", gname);
             _namehash = keccak256(abi.encodePacked(_namehash, keccak256(labels[j])));
         }
     }
 
-    function randomGateways(string memory gName) public view returns(string[] memory urls) {
+    /**
+     * @dev selects random gateway for CCIP resolution
+     * @param gname : gateway label
+     */
+    function randomGateways(string memory gname) public view returns(string[] memory urls) {
         uint gLen = Gateways.length;
         uint len = (gLen / 2) + 1;
         if (len > 5) len = 5;
         urls = new string[](len);
         uint k = block.timestamp;
         for (uint i; i < len; i++) {
-            k = uint(keccak256(abi.encodePacked(k, gName, msg.sender, blockhash(block.number - 1)))) % gLen;
-            urls[i] = string.concat("https://", Gateways[k].domain, "/", gName, "/{data}");
+            k = uint(keccak256(abi.encodePacked(k, gname, msg.sender, blockhash(block.number - 1)))) % gLen;
+            urls[i] = string.concat("https://", Gateways[k].domain, "/", gname, "/{data}");
         }
     }
 
+    /**
+     * @dev resolves a name with CCIP
+     * @param name : name to resolve
+     * @param data : CCIP call data
+     */
     function resolve(bytes calldata name, bytes calldata data) external view returns(bytes memory) {
-        (string memory gName, bytes32 namehash) = DNSDecode(name);
+        (string memory gname, bytes32 namehash) = DNSDecode(name);
         revert OffchainLookup(
             address(this), // callback contract
-            randomGateways(gName), // gateway URL array
+            randomGateways(gname), // gateway URL array
             bytes.concat( //request {data}
                 data[: 4],
                 namehash,
@@ -83,10 +108,10 @@ contract ResolverIsTest {
             )
         );
     }
-    
-    error InvalidHash();
-    error SignatureExpired();
 
+    /**
+     * @dev callback function
+     */
     function __callback(
         bytes calldata response, // data from web2 gateway
         bytes calldata extraData // extradata from resolve function
@@ -114,6 +139,11 @@ contract ResolverIsTest {
         return _result;
     }
 
+    /**
+     * @dev checks if a signature is valid
+     * @param hash : hash of signed message
+     * @param signature : signature to verify
+     */
     function isValid(bytes32 hash, bytes calldata signature) external view returns(bool) {
         bytes32 r;
         bytes32 s;
@@ -134,14 +164,19 @@ contract ResolverIsTest {
         return (_signer != address(0) && isSigner[_signer]);
     }
 
-    // GATEWAY MANAGEMENT
+    /// @dev : GATEWAY MANAGEMENT
     modifier onlyDev() {
         require(msg.sender == Dev);
         _;
     }
 
+    /**
+     * @dev add gateway to the list
+     * @param operator : controller of gateway
+     * @param domain : domain gateway
+     */
     function addGateway(address operator, string calldata domain) external onlyDev {
-        require(!isSigner[operator], "Duplicate_Operator");
+        require(!isSigner[operator], "OPERATOR_EXISTS");
         Gateways.push(Gate(
             domain,
             operator
@@ -149,6 +184,10 @@ contract ResolverIsTest {
         isSigner[operator] = true;
     }
 
+     /**
+     * @dev remove gateway from the list
+     * @param _index : gateway index
+     */
     function removeGateway(uint _index) external onlyDev {
         isSigner[Gateways[_index].operator] = false;
         unchecked {
@@ -158,6 +197,12 @@ contract ResolverIsTest {
         Gateways.pop();
     }
 
+    /**
+     * @dev replace gateway for a given controller
+     * @param _index : gateway index to replace
+     * @param operator : controller of gateway
+     * @param domain : new domain gateway
+     */
     function replaceGateway(uint _index, address operator, string calldata domain) external onlyDev {
         require(!isSigner[operator], "Duplicate_Operator");
         isSigner[Gateways[_index].operator] = false;
