@@ -3,6 +3,7 @@ hosts
 gateways/.env
 gateways/node_modules/
 gateways/package-lock.json
+gateways/.DS_Store
 
 frontend/.env
 frontend/node_modules/
