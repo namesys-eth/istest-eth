@@ -19,18 +19,18 @@ const	headers = {
 	"Access-Control-Allow-Origin": "*"
 };
 
-async function fetch(request, env) {
-	return this.handleRequest(request, env).catch(
+async function fetch(method, url, env) {
+	return this.handleRequest(method, url, env).catch(
 		(err) => {
 			return this.Output(err.stack, 500, 33)
 		}
 	)
 };
 
-async function handleRequest(request, env) {
-	if (request.method !== 'GET') return this.Output(`Method ${request.method} Not Allowed`.toUpperCase(), 405, 6);
-	const { pathname } = new URL(request.url);
-	console.log("REQUEST", JSON.stringify(request.url));
+async function handleRequest(method, url, env) {
+	if (method !== 'GET') return this.Output(`Method ${method} Not Allowed`.toUpperCase(), 405, 6);
+	const { pathname } = new URL(url);
+	console.log("REQUEST", JSON.stringify(url));
 	let paths = pathname.toLowerCase().split("/");
 	if (paths.length < 4 || paths.length > 5) {
 		return this.Output("Bad Request".toUpperCase(), 400, 6)

@@ -119,8 +119,8 @@ contract Resolver {
             revert InvalidHash(); //extra hash check, timeout @ 3 blocks
 
         (uint64 _validity,
-            bytes memory _signature,
-            bytes memory _result) = abi.decode(response, (uint64, bytes, bytes));
+        bytes memory _signature,
+        bytes memory _result) = abi.decode(response, (uint64, bytes, bytes));
         if (block.timestamp > _validity) revert SignatureExpired();
         if (!Resolver(address(this)).isValid( // signature check
                 keccak256(
