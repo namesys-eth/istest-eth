@@ -24,20 +24,19 @@ const	headers = {
 	"Access-Control-Allow-Origin": "*"
 };
 
-async function handleCall(method, url, env) {
+async function handleCall(url, env) {
 	const pathname = url;
 	let paths = pathname.toLowerCase().split("/");
-	if (paths.length < 4 || paths.length > 5) {
+	if (paths.length != 4) {
 		return {
 			message: 'BAD_REQUEST',
 			status: 400,
 			cache: 6
 		}
 	}
-
 	if (!chains[paths[1]]) {
 		return {
-			message: `NETWORK_NOT_SUPPORTED: ${paths[1].toUpperCase()}`,
+			message: 'BAD_NETWORK',
 			status: 400,
 			cache: 6
 		}
@@ -89,10 +88,9 @@ async function handleCall(method, url, env) {
 	}
 };
 
-const method = workerData.method;
 const url = workerData.url;
 const env = JSON.parse(workerData.env);
 
-const res = await handleCall(method, url, env);
+const res = await handleCall(url, env);
 let response  = await res;
 parentPort.postMessage(JSON.stringify(response));

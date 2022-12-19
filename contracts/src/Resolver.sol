@@ -3,12 +3,11 @@ pragma solidity > 0.8 .0 < 0.9 .0;
 
 /**
  * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs)
- * @title WLNR Base
+ * @title istest Resolver
  */
 contract Resolver {
 
     address public Dev;
-    iENS public ENS;
 
     /// @dev : Error events
     error RequestError();
@@ -31,68 +30,72 @@ contract Resolver {
     constructor() {
         Gateways.push(Gate("goerli.namesys.xyz", 0xA0896ab9606EA2CF884549030Ddc960A11b1e630)); // set initial gateway addr here
         isSigner[0xA0896ab9606EA2CF884549030Ddc960A11b1e630] = true;
-        ENS = iENS(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e);
     }
 
     /**
      * @dev DNSDecode() function for web2 CCIP middleware
-     * @param name : name to resolve
+     * @param encoded : name being resolved on encoded
+     * @return mainnet : test name to be resolved on mainnet
+     * @return namehash : hash of test name
      */
-    function DNSDecode(bytes calldata name) public pure returns(string memory gname, bytes32 _namehash) {
+    function DNSDecode(bytes calldata encoded) public pure returns(string memory mainnet, bytes32 namehash) {
         uint j;
         uint len;
-        bytes[] memory labels = new bytes[](12); // max 11 ...sub.sub.domain.eth
-        for (uint i; name[i] > 0x0;) {
-            len = uint8(bytes1(name[i: ++i]));
-            labels[j] = name[i: i += len];
+        bytes[] memory labels = new bytes[](12); // max 11 ...sub.sub.istest.eth
+        for (uint i; encoded[i] > 0x0;) {
+            len = uint8(bytes1(encoded[i: ++i]));
+            labels[j] = encoded[i: i += len];
             j++;
         }
-        gname = string(labels[--j]); //.eth
-        _namehash = keccak256(abi.encodePacked(bytes32(0), keccak256(labels[j--]))); //.eth
+        mainnet = string(labels[--j]); // 'eth' label
+        namehash = keccak256(abi.encodePacked(bytes32(0), keccak256(labels[j--]))); // hash of 'eth'
         if (j == 0) // istest.eth
             return (
-                string.concat(string(labels[0]), ".", gname),
-                keccak256(abi.encodePacked(_namehash, keccak256(labels[0])))
+                string.concat(string(labels[0]), ".", mainnet),
+                keccak256(abi.encodePacked(namehash, keccak256(labels[0])))
             );
 
-        while (j > 0) {
-            gname = string.concat(string(labels[--j]), ".", gname);
-            _namehash = keccak256(abi.encodePacked(_namehash, keccak256(labels[j])));
+        while (j > 0) { // string formatted ...sub.sub.istest.eth 
+            mainnet = string.concat(string(labels[--j]), ".", mainnet);
+            namehash = keccak256(abi.encodePacked(namehash, keccak256(labels[j])));
         }
     }
 
     /**
-     * @dev selects random gateway for CCIP resolution
-     * @param gname : gateway label
+     * @dev selects and construct random gateways for CCIP resolution
+     * @param mainnet : name to resolve on mainnet 
+     * @return urls : ordered list of gateway URLs for HTTPS calls
      */
-    function randomGateways(string memory gname) public view returns(string[] memory urls) {
+    function randomGateways(string memory mainnet) public view returns(string[] memory urls) {
         uint gLen = Gateways.length;
         uint len = (gLen / 2) + 1;
         if (len > 5) len = 5;
         urls = new string[](len);
         uint k = block.timestamp;
         for (uint i; i < len; i++) {
-            k = uint(keccak256(abi.encodePacked(k, gname, msg.sender, blockhash(block.number - 1)))) % gLen;
-            urls[i] = string.concat("https://", Gateways[k].domain, "/", gname, "/{data}");
+            // random seeding
+            k = uint(keccak256(abi.encodePacked(k, mainnet, msg.sender, blockhash(block.number - 1)))) % gLen; 
+            // Gateway @ URL
+            urls[i] = string.concat("https://", Gateways[k].domain, "/", mainnet, "/{data}"); 
         }
     }
 
     /**
-     * @dev resolves a name with CCIP
-     * @param name : name to resolve
+     * @dev resolves a name with CCIP-Read OffChainLookup
+     * @param encoded : name to resolve on mainnet
      * @param data : CCIP call data
      */
-    function resolve(bytes calldata name, bytes calldata data) external view returns(bytes memory) {
-        (string memory gname, bytes32 namehash) = DNSDecode(name);
+    function resolve(bytes calldata encoded, bytes calldata data) external view returns(bytes memory) {
+        (string memory mainnet, bytes32 namehash) = DNSDecode(encoded);
         revert OffchainLookup(
-            address(this), // callback contract
-            randomGateways(gname), // gateway URL array
-            bytes.concat( //request {data}
-                data[: 4],
+            address(this), // sender/callback contract 
+            randomGateways(mainnet), // gateway URL array
+            bytes.concat( // callData {data}
+                data[:4],
                 namehash,
                 data.length > 36 ? data[36: ] : bytes("")
             ),
-            Resolver.__callback.selector, // callback function
+            Resolver.__callback.selector, // callback function 
             abi.encode( // callback extradata
                 block.number,
                 namehash,
@@ -108,11 +111,11 @@ contract Resolver {
     }
 
     /**
-     * @dev callback function
+     * @dev CCIP callback function
      */
     function __callback(
         bytes calldata response, // data from web2 gateway
-        bytes calldata extraData // extradata from resolve function
+        bytes calldata extraData // extradata from resolver function
     ) external view returns(bytes memory) {
         (uint blknum, bytes32 namehash, bytes32 _hash) = abi.decode(extraData, (uint, bytes32, bytes32));
         if (block.number > blknum + 3 || _hash != keccak256(abi.encodePacked(blockhash(blknum - 1), namehash, msg.sender)))

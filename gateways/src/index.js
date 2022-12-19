@@ -49,7 +49,6 @@ app.get('/*', async function (request, response) {
   const env = process.env;
   const worker = new Worker('./src/worker.js', {
     workerData: {
-      method: request.method,
          url: request.url,
          env: JSON.stringify(env)
     }
@@ -68,5 +67,5 @@ app.get('/*', async function (request, response) {
   worker.on("exit", code => {});
 });
 
-console.log("istest-eth server is listening on port " + PORT);
+console.log("istest-eth CCIP gateway is running on port " + PORT);
 https.createServer(options,app).listen(PORT);

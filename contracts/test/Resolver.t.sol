@@ -17,8 +17,8 @@ interface iResolver {
 }
 
 /**
- * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs/BENSYC)
- * @title WLNR Base
+ * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs)
+ * @title Reolver tester
  */
 contract ResolverTest is Test {
     error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
