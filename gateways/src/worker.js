@@ -6,16 +6,23 @@ import {
 } from 'worker_threads';
 import { ethers } from 'ethers';
 import 'isomorphic-fetch';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+require('dotenv').config();
 
 const chains = {
 	"ethereum": [
 								"https://rpc.ankr.com/eth",
-								"https://eth-rpc.gateway.pokt.network"
+								"https://eth-rpc.gateway.pokt.network",
+								`https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY_MAINNET}`
 							],
 	"gnosis":   [ "https://rpc.ankr.com/gnosis"  ],
 	"polygon":  [ "https://rpc.ankr.com/polygon"  ],
 	"arbitrum": [ "https://rpc.ankr.com/arbitrum"  ],
-	"goerli":   [ "https://rpc.ankr.com/eth_goerli" ]
+	"goerli":   [
+								"https://rpc.ankr.com/eth_goerli",
+								`https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY_GOERLI}`
+							]
 };
 const	ttl = 600;
 const	headers = {
@@ -24,36 +31,56 @@ const	headers = {
 	"Access-Control-Allow-Origin": "*"
 };
 
+// bytes4 of hash of ENSIP-10 'resolve()' identifier
+const ensip10 = '0x9061b923';
+const ccip = '0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f';
+const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
+const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
+const abi = ethers.utils.defaultAbiCoder;
+
 async function handleCall(url, env) {
 	const pathname = url;
-	let paths = pathname.toLowerCase().split("/");
-	if (paths.length != 4) {
+	let paths = pathname.toLowerCase().split('/');
+	if (paths.length != 3) {
 		return {
-			message: 'BAD_REQUEST',
+			message: abi.encode(["uint256", "bytes", "bytes"], ['400', '0x0', '0x0']), // 400: BAD_QUERY
 			status: 400,
 			cache: 6
 		}
 	}
-	if (!chains[paths[1]]) {
+	if (!chains[paths[1].split(':')[0]]) {
 		return {
-			message: 'BAD_NETWORK',
-			status: 400,
+			message: abi.encode(["uint256", "bytes", "bytes"], ['401', '0x0', '0x0']), // 401: BAD_GATEWAY
+			status: 401,
 			cache: 6
 		}
 	}
-	const api = chains[paths[1]][0];
-	const res = await fetch(api, {
+	let chain = chains[paths[1].split(':')[0]][0];
+	let name  = paths[1].split(':')[1];
+	let selector = paths[2].split('0x')[1].slice(0,8);	 // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
+	let namehash = paths[2].split('0x')[1].slice(8,72);  // namehash of 'nick.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
+	//let encoded  = paths[2].split('0x')[1].slice(72,); // DNSEncode('nick.eth') = 046e69636b0365746800
+	if (selector != 'bc1c58d1') {
+		return {
+			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x0', '0x0']),       // 402: BAD_INTERFACE
+			status: 402,
+			cache: 7
+		}
+	}
+	let calldata = '0x' + selector + namehash;
+	let resolver = await mainnet.getResolver(name)
+	const res = await fetch(chain, {
 		body: JSON.stringify({
 			"jsonrpc": "2.0",
 			 "method": "eth_call",
 			 "params": [
 									{
-										"data": paths[3],
-				  					  "to": paths[2]
+										"data": calldata,
+				  					  "to": resolver.address
 									},
 									"latest"
 								],
-			     "id": 42
+			     "id": 1
 		}),
 		method: 'POST',
 		headers: {
@@ -63,34 +90,63 @@ async function handleCall(url, env) {
 			cacheTtl: 6
 		},
 	});
+
 	let { headers } = res;
 	let contentType = headers.get('content-type') || '';
-	if ( contentType.includes('application/json') ) {
+
+	if (contentType.includes('application/json')) {
 		let data = await res.json();
-		if (data.error || data.result === "0x") {
+		let result = data.result.toString();
+		let { digest, signature, validity } = await Sign(result, namehash, env);
+		if (data.error || result === "0x") {
 			return {
-				message: 'BAD_RESPONSE',
-				status: 400,
+				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x0', '0x0']),       // 403: BAD_RESULT
+				status: 403,
 				cache: 6
 			}
 		}
 		return {
-			message: data.result,
+			message: abi.encode(["uint256", "bytes", "bytes"], [validity, signature, result]), // 200: SUCCESS
 			status: 200,
 			cache: 666
 		}
 	} else {
 		return {
-			message: 'BAD_GATEWAY',
+			message: abi.encode(["uint256", "bytes", "bytes"], ['502', '0x0', '0x0']),         // 502: BAD_HEADER
 			status: 502,
 			cache: 7
 		}
 	}
 };
 
+async function Sign(result, namehash, env) {
+	if (!env.PRIVATE_KEY) {
+		return {
+			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x0', '0x0']),         // 500: BAD_SIGNATURE
+			status: 500,
+			cache: 6
+		}
+	}
+	let validity = (Date.now() + 10 * 60 * 1000).toString(); // TTL: 10 minutes
+	let signer = new ethers.utils.SigningKey(env.PRIVATE_KEY.slice(0, 2) === "0x" ? env.PRIVATE_KEY : "0x" + env.PRIVATE_KEY);
+	let digest = ethers.utils.keccak256(
+		abi.encode(
+			[ "string", "address", "uint256", "bytes32", "bytes" ],
+			[ '0x1900', ccip, validity, `0x${namehash}`,  result ]
+		)
+	);
+	let signedDigest = await signer.signDigest(ethers.utils.arrayify(digest));
+	const signature = ethers.utils.joinSignature(signedDigest)
+	console.log('--------')
+	console.log('result: ', result);
+	console.log('signature: ', signature);
+	console.log('digest: ', digest);
+	console.log('validity: ', validity);
+	return { digest, signature, validity }
+}
+
 const url = workerData.url;
 const env = JSON.parse(workerData.env);
-
 const res = await handleCall(url, env);
 let response  = await res;
 parentPort.postMessage(JSON.stringify(response));

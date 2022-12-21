@@ -20,18 +20,14 @@ const PORT = 3002
 const app = express();
 app.use(express.json());
 app.use(cors({
-	 origin: [
-    				'*',
-    			 ],
-	headers: [
-				    'Content-Type',
-					 ],
+	 origin: ['*'],
+	headers: ['Content-Type']
 }));
 const options = {
 	 key: fs.readFileSync('/root/.ssl/sshmatrix.club.key'),
 	cert: fs.readFileSync('/root/.ssl/sshmatrix.club.crt')
 };
-
+const abi = ethers.utils.defaultAbiCoder;
 function setHeader(cache) {
 	return {
 		'Allow': 'GET',
@@ -62,7 +58,7 @@ app.get('/*', async function (request, response) {
     console.error(error);
     response.header(setHeader(6));
     response.status(405);
-    response.json('INTERNAL_ERROR').end();
+    response.json(abi.encode(["uint256", "bytes", "bytes"], ['405', '0x0', '0x0'])).end(); // 405: INTERNAL_ERROR
   });
   worker.on("exit", code => {});
 });
