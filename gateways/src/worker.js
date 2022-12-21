@@ -57,12 +57,12 @@ async function handleCall(url, env) {
 	}
 	let chain = chains[paths[1].split(':')[0]][0];
 	let name  = paths[1].split(':')[1];
-	let selector = paths[2].split('0x')[1].slice(0,8);	 // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
+	let selector = paths[2].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = paths[2].split('0x')[1].slice(8,72);  // namehash of 'nick.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
 	//let encoded  = paths[2].split('0x')[1].slice(72,); // DNSEncode('nick.eth') = 046e69636b0365746800
 	if (selector != 'bc1c58d1') {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']),       // 402: BAD_INTERFACE
+			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
 			status: 402,
 			cache: 7
 		}
@@ -100,19 +100,19 @@ async function handleCall(url, env) {
 		let { digest, signature, validity } = await Sign(response, namehash, env);
 		if (data.error || response === "0x") {
 			return {
-				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),       // 403: BAD_RESULT
-				status: 403,
+				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),
+				status: 403,																													 // 403: BAD_RESULT
 				cache: 6
 			}
 		}
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], [validity, signature, response]), // 200: SUCCESS
-			status: 200,
+			message: abi.encode(["uint256", "bytes", "bytes"], [validity, signature, response]),
+			status: 200,																														 // 200: SUCCESS
 			cache: 666
 		}
 	} else {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['502', '0x', '0x']),         // 502: BAD_HEADER
+			message: abi.encode(["uint256", "bytes", "bytes"], ['502', '0x', '0x']), // 502: BAD_HEADER
 			status: 502,
 			cache: 7
 		}
@@ -122,7 +122,7 @@ async function handleCall(url, env) {
 async function Sign(response, namehash, env) {
 	if (!env.PRIVATE_KEY) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x', '0x']),         // 500: BAD_SIGNATURE
+			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x', '0x']), // 500: BAD_SIGNATURE
 			status: 500,
 			cache: 6
 		}
@@ -140,7 +140,7 @@ async function Sign(response, namehash, env) {
 		);
 	} catch (e) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['406', '0x', '0x']),         // 406: BAD_NAMEHASH
+			message: abi.encode(["uint256", "bytes", "bytes"], ['406', '0x', '0x']), // 406: BAD_NAMEHASH
 			status: 406,
 			cache: 6
 		}

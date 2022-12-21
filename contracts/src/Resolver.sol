@@ -108,7 +108,8 @@ contract Resolver {
             bytes.concat( // custom callData {data} [see ENSIP-10] + encoded name for eth_call by HTTP gateway
                 data[:4],
                 namehash,
-                encoded
+                //data.length > 36 ? data[36: ] : bytes("")
+                encoded   // ensure forward compatibility with future CCIP-Read enabled Resolvers
             ),
             Resolver.__callback.selector, // callback function 
             abi.encode( // callback extradata
