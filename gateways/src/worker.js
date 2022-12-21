@@ -12,17 +12,17 @@ require('dotenv').config();
 
 const chains = {
 	"ethereum": [
-								"https://rpc.ankr.com/eth",
-								"https://eth-rpc.gateway.pokt.network",
-								`https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY_MAINNET}`
-							],
+		"https://rpc.ankr.com/eth",
+		"https://eth-rpc.gateway.pokt.network",
+		`https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY_MAINNET}`
+	],
 	"gnosis":   [ "https://rpc.ankr.com/gnosis"  ],
 	"polygon":  [ "https://rpc.ankr.com/polygon"  ],
 	"arbitrum": [ "https://rpc.ankr.com/arbitrum"  ],
 	"goerli":   [
-								"https://rpc.ankr.com/eth_goerli",
-								`https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY_GOERLI}`
-							]
+		"https://rpc.ankr.com/eth_goerli",
+		`https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY_GOERLI}`
+	]
 };
 const	ttl = 600;
 const	headers = {
