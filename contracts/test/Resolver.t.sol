@@ -22,7 +22,6 @@ interface iResolver {
  */
 contract ResolverGoerli is Test {
     error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
-    error RequestError(bytes32 expected, bytes32 result, bytes extradata, uint blknum, bytes response);
   
     Resolver public ccip;
     string public testnet; 
@@ -118,18 +117,30 @@ contract ResolverGoerli is Test {
         bytes memory _src = "nick.istest.eth";
         (bytes memory _encoded,) = DNSEncode(_src);
         (, bytes32 _namehash) = ccip.DNSDecode(_encoded);
-        // mimic HTTP response with _result
+        // mimic HTTP response with response
+        bytes memory response  = bytes('0x0000000000000000000000000000000000000000000000000000018535a79e41000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000413cb04c8f432369a565a2d27b4fd5b5ce3176aeb3c80560405add01998adc09b922aa93b2f0f90bc6da64812cec458571ed0ff30c517ebf72b57e741fc7c87e1f1b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
+        // BUG <<<< EvmError: Revert
+        (uint256 __validity,
+        bytes memory __signature,
+        bytes memory __result) = abi.decode(response, (uint256, bytes, bytes));
+
         bytes memory _result = bytes('0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
+        assertEq(_result, __result); 
         bytes32 _digest = keccak256(
                     abi.encodePacked(
                         hex'1900',
                         address(ccip),
-                        uint64(1671638397479), // validity in unix timestamp
+                        __validity, // validity in unix timestamp
                         _namehash,
                         _result
                     )
                 );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(PrivateKey, _digest);
-        assertTrue(ccip.isValid(_digest, abi.encodePacked(r,s,v)));
+        assertEq(abi.encodePacked(r,s,v), __signature); 
+        bytes memory _signature = bytes('0x3cb04c8f432369a565a2d27b4fd5b5ce3176aeb3c80560405add01998adc09b922aa93b2f0f90bc6da64812cec458571ed0ff30c517ebf72b57e741fc7c87e1f1b');
+        assertEq(_signature, __signature); 
+        uint256 _validity = uint256(1671642455617);
+        assertEq(_validity, __validity); 
+        assertTrue(ccip.isValid(_digest, _signature));
     }
 }

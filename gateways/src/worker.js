@@ -96,9 +96,9 @@ async function handleCall(url, env) {
 
 	if (contentType.includes('application/json')) {
 		let data = await res.json();
-		let result = data.result ? data.result.toString() : '0x';
-		let { digest, signature, validity } = await Sign(result, namehash, env);
-		if (data.error || result === "0x") {
+		let response = data.result ? data.result.toString() : '0x';
+		let { digest, signature, validity } = await Sign(response, namehash, env);
+		if (data.error || response === "0x") {
 			return {
 				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),       // 403: BAD_RESULT
 				status: 403,
@@ -106,7 +106,7 @@ async function handleCall(url, env) {
 			}
 		}
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], [validity, signature, result]), // 200: SUCCESS
+			message: abi.encode(["uint256", "bytes", "bytes"], [validity, signature, response]), // 200: SUCCESS
 			status: 200,
 			cache: 666
 		}
@@ -119,7 +119,7 @@ async function handleCall(url, env) {
 	}
 };
 
-async function Sign(result, namehash, env) {
+async function Sign(response, namehash, env) {
 	if (!env.PRIVATE_KEY) {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x', '0x']),         // 500: BAD_SIGNATURE
@@ -135,7 +135,7 @@ async function Sign(result, namehash, env) {
 		digest = ethers.utils.keccak256(
 			abi.encode(
 				[ "string", "address", "uint256", "bytes32", "bytes" ],
-				[ '0x1900', ccip, validity, `0x${namehash}`,  result ]
+				[ '0x1900', ccip, validity, `0x${namehash}`,  response ]
 			)
 		);
 	} catch (e) {
@@ -148,16 +148,17 @@ async function Sign(result, namehash, env) {
 
 	let signedDigest = await signer.signDigest(ethers.utils.arrayify(digest));
 	const signature = ethers.utils.joinSignature(signedDigest)
-	console.log('--------')
-	console.log('result: ', result);
-	console.log('signature: ', signature);
-	console.log('digest: ', digest);
-	console.log('validity: ', validity);
+	console.log('------------------')
+	console.log('Response  : ', response);
+	console.log('Signature : ', signature);
+	console.log('Digest    : ', digest);
+	console.log('Validity  : ', validity);
+	console.log('------------------')
 	return { digest, signature, validity }
 }
 
 const url = workerData.url;
 const env = JSON.parse(workerData.env);
 const res = await handleCall(url, env);
-let response  = await res;
-parentPort.postMessage(JSON.stringify(response));
+let callback  = await res;
+parentPort.postMessage(JSON.stringify(callback));
