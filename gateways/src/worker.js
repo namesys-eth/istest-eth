@@ -74,13 +74,13 @@ async function handleCall(url, env) {
 			"jsonrpc": "2.0",
 			 "method": "eth_call",
 			 "params": [
-									{
-										"data": calldata,
-				  					  "to": resolver.address
-									},
-									"latest"
-								],
-			     "id": 1
+				 {
+					 "data": calldata,
+					 "to": resolver.address
+				 },
+				 "latest"
+			 ],
+			 "id": 1
 		}),
 		method: 'POST',
 		headers: {
