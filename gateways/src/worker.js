@@ -43,14 +43,14 @@ async function handleCall(url, env) {
 	let paths = pathname.toLowerCase().split('/');
 	if (paths.length != 3) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['400', '0x0', '0x0']), // 400: BAD_QUERY
+			message: abi.encode(["uint256", "bytes", "bytes"], ['400', '0x', '0x']), // 400: BAD_QUERY
 			status: 400,
 			cache: 6
 		}
 	}
 	if (!chains[paths[1].split(':')[0]]) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['401', '0x0', '0x0']), // 401: BAD_GATEWAY
+			message: abi.encode(["uint256", "bytes", "bytes"], ['401', '0x', '0x']), // 401: BAD_GATEWAY
 			status: 401,
 			cache: 6
 		}
@@ -62,7 +62,7 @@ async function handleCall(url, env) {
 	//let encoded  = paths[2].split('0x')[1].slice(72,); // DNSEncode('nick.eth') = 046e69636b0365746800
 	if (selector != 'bc1c58d1') {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x0', '0x0']),       // 402: BAD_INTERFACE
+			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']),       // 402: BAD_INTERFACE
 			status: 402,
 			cache: 7
 		}
@@ -96,11 +96,11 @@ async function handleCall(url, env) {
 
 	if (contentType.includes('application/json')) {
 		let data = await res.json();
-		let result = data.result.toString();
+		let result = data.result ? data.result.toString() : '0x';
 		let { digest, signature, validity } = await Sign(result, namehash, env);
 		if (data.error || result === "0x") {
 			return {
-				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x0', '0x0']),       // 403: BAD_RESULT
+				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),       // 403: BAD_RESULT
 				status: 403,
 				cache: 6
 			}
@@ -112,7 +112,7 @@ async function handleCall(url, env) {
 		}
 	} else {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['502', '0x0', '0x0']),         // 502: BAD_HEADER
+			message: abi.encode(["uint256", "bytes", "bytes"], ['502', '0x', '0x']),         // 502: BAD_HEADER
 			status: 502,
 			cache: 7
 		}
@@ -122,19 +122,30 @@ async function handleCall(url, env) {
 async function Sign(result, namehash, env) {
 	if (!env.PRIVATE_KEY) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x0', '0x0']),         // 500: BAD_SIGNATURE
+			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x', '0x']),         // 500: BAD_SIGNATURE
 			status: 500,
 			cache: 6
 		}
 	}
+
 	let validity = (Date.now() + 10 * 60 * 1000).toString(); // TTL: 10 minutes
 	let signer = new ethers.utils.SigningKey(env.PRIVATE_KEY.slice(0, 2) === "0x" ? env.PRIVATE_KEY : "0x" + env.PRIVATE_KEY);
-	let digest = ethers.utils.keccak256(
-		abi.encode(
-			[ "string", "address", "uint256", "bytes32", "bytes" ],
-			[ '0x1900', ccip, validity, `0x${namehash}`,  result ]
-		)
-	);
+	let digest;
+	try {
+		digest = ethers.utils.keccak256(
+			abi.encode(
+				[ "string", "address", "uint256", "bytes32", "bytes" ],
+				[ '0x1900', ccip, validity, `0x${namehash}`,  result ]
+			)
+		);
+	} catch (e) {
+		return {
+			message: abi.encode(["uint256", "bytes", "bytes"], ['406', '0x', '0x']),         // 406: BAD_NAMEHASH
+			status: 406,
+			cache: 6
+		}
+	}
+
 	let signedDigest = await signer.signDigest(ethers.utils.arrayify(digest));
 	const signature = ethers.utils.joinSignature(signedDigest)
 	console.log('--------')
