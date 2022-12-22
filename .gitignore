@@ -1,9 +1,18 @@
 hosts
 
+manager/.env
+manager/node_modules/
+manager/package-lock.json
+manager/.DS_Store
+manager/*/.DS_Store
+manager/*/*/.DS_Store
+
 gateways/.env
 gateways/node_modules/
 gateways/package-lock.json
 gateways/.DS_Store
+gateways/*/.DS_Store
+gateways/*/*/.DS_Store
 
 frontend/.env
 frontend/node_modules/
