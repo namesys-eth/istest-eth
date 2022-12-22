@@ -28,31 +28,32 @@ const chains = {
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const chain = 'goerli'
 const rpc = chains[chain][0];
-const ensip10 = '9061b923';
+const ensip10 = '0x9061b923';
 const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
 const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
 const abi = ethers.utils.defaultAbiCoder;
 
 async function handleCall() {
 
-	let name = 'istest1.eth';
+  let name = 'istest1.eth';
 	let selector = 'bc1c58d1';                                 // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = ethers.utils.namehash('nick.istest1.eth');  // namehash of 'nick.istest1.eth'
-  let encoded = '046e69636b07697374657374310365746800';      // bytes DNSEncode('nick.istest1.eth')
+  let encoded = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                      // bytes DNSEncode('nick.istest1.eth')
   console.log('       node : ', namehash);
-	let calldata = '0x' + selector + namehash;
-  let resolve  = '0x' + ensip10 + encoded + selector + namehash;
-	let resolver = chain == 'goerli' ? await goerli.getResolver(name) : await mainnet.getResolver(name);
+	let calldata1 = '0x' + selector + namehash;                     // eth_call: Resolver.contenthash(node)
+  let calldata2 = '0x' + ensip10 + encoded + selector + namehash; // eth_call: Resolver.resolve(DNSEncoded, (bytes4, node))
+	let resolver  = chain == 'goerli' ? await goerli.getResolver(name) : await mainnet.getResolver(name);
+  //console.log(resolver);
   console.log('   resolver : ', resolver.address);
-  //let content  = await resolver.getContentHash();
-  //console.log('contenthash : ', content);
+  let content  = await resolver.getContentHash(namehash);
+  console.log('contenthash : ', content);
 	const res = await fetch(rpc, {
 		body: JSON.stringify({
 			"jsonrpc": "2.0",
 			 "method": "eth_call",
 			 "params": [
 				 {
-					 "data": resolve,
+					 "data": calldata1, //calldata2
 					 "to": resolver.address
 				 },
 				 "latest"

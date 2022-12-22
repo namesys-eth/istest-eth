@@ -1,15 +1,12 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity > 0.8 .0 < 0.9 .0;
 
-import "src/LibBytes.sol";
-import "forge-std/Test.sol";
-
 /**
  * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs)
  * @title istest Resolver
  */
 contract Resolver {
-    using LibBytes for bytes;
+    
     address public Dev;
     string public testnet = "ethereum"; 
 
