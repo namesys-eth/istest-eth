@@ -24,6 +24,9 @@ contract Resolver {
         bytes extraData
     );
 
+    /// @dev : Emitted events
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     /// @dev : Gateway struct
     struct Gate {
         string domain;
@@ -36,6 +39,7 @@ contract Resolver {
      * @dev Constructor
      */
     constructor() {
+        Dev = msg.sender;
         /// @dev : set initial Gateway here
         Gateways.push(Gate(
             "sshmatrix.club:3002", 
@@ -232,5 +236,14 @@ contract Resolver {
         isSigner[Gateways[_index].operator] = false;
         Gateways[_index] = Gate(domain, operator);
         isSigner[operator] = true;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit OwnershipTransferred(Dev, newDev);
+        Dev = newDev;
     }
 }
