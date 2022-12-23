@@ -38,12 +38,15 @@ async function handleCall() {
   let name = 'istest1.eth';
 	let selector = 'bc1c58d1';                                 // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = ethers.utils.namehash('nick.istest1.eth');  // namehash of 'nick.istest1.eth'
-  let encoded = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                      // bytes DNSEncode('nick.istest1.eth')
+
+  let calldata0 = '0x' + selector;
+  let encoded   = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                      // bytes DNSEncode('nick.istest1.eth')
+
   console.log('       node : ', namehash);
 	let calldata1 = '0x' + selector + namehash.split('0x')[1];                     // eth_call: Resolver.contenthash(node)
   let calldata2 = '0x' + ensip10 + encoded + selector + namehash.split('0x')[1]; // eth_call: Resolver.resolve(DNSEncoded, (bytes4, node))
 	let resolver  = chain == 'goerli' ? await goerli.getResolver(name) : await mainnet.getResolver(name);
-  console.log(calldata1);
+  //console.log(calldata0);
   console.log('   resolver : ', resolver.address);
   let content  = await resolver.getContentHash(namehash);
   console.log('contenthash : ', content);
@@ -53,7 +56,7 @@ async function handleCall() {
 			 "method": "eth_call",
 			 "params": [
 				 {
-					 "data": calldata2, //calldata1 or calldata2
+					 "data": calldata0, //calldata0,1,2
 					 "to": resolver.address
 				 },
 				 "latest"
@@ -84,13 +87,13 @@ async function handleCall() {
 		}
     return {
       message: response,
-      status: 401
+      status: 200
     }
 
 	} else {
     return {
       message: 'BAD_RESPONSE',
-      status: 402
+      status: 401
     }
 	}
 };

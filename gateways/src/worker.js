@@ -41,25 +41,27 @@ const abi = ethers.utils.defaultAbiCoder;
 async function handleCall(url, env) {
 	const pathname = url;
 	let paths = pathname.toLowerCase().split('/');
-	if (paths.length != 3) {
+	console.log(paths.length);
+	if (paths.length != 4) {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['400', '0x', '0x']), // 400: BAD_QUERY
 			status: 400,
 			cache: 6
 		}
 	}
-	if (!chains[paths[1].split(':')[0]]) {
+	if (!['1','5'].includes(paths[1].split(':')[1])) {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['401', '0x', '0x']), // 401: BAD_GATEWAY
 			status: 401,
 			cache: 6
 		}
 	}
-	let chain = chains[paths[1].split(':')[0]][0];
-	let name  = paths[1].split(':')[1];
-	let selector = paths[2].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
-	let namehash = paths[2].split('0x')[1].slice(8,72);  // namehash of 'nick.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
-	//let encoded  = paths[2].split('0x')[1].slice(72,); // DNSEncode('nick.eth') = 046e69636b0365746800
+	let chain = chains[paths[1].split(':')[1] == '5' ? 'goerli' : 'ethereum'][0];
+	let name  = paths[2];
+	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
+	let namehash = paths[3].split('0x')[1].slice(8,72);  // namehash of 'nick.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
+	let extradata = paths[3].split('0x')[1].slice(72,);  // extradata for resolver.contenthash() =
+	let encoded = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';               // DNSEncode('nick.istest1.eth')
 	if (selector != 'bc1c58d1') {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
@@ -67,8 +69,9 @@ async function handleCall(url, env) {
 			cache: 7
 		}
 	}
-	let calldata = '0x' + selector + namehash;
-	let resolver = await mainnet.getResolver(name)
+	let calldata = paths[3];
+	let resolver = await mainnet.getResolver(name);
+
 	const res = await fetch(chain, {
 		body: JSON.stringify({
 			"jsonrpc": "2.0",
@@ -134,8 +137,8 @@ async function Sign(response, namehash, env) {
 	try {
 		digest = ethers.utils.keccak256(
 			abi.encode(
-				[ "string", "address", "uint256", "bytes32", "bytes" ],
-				[ '0x1900', ccip, validity, `0x${namehash}`,  response ]
+				[ "string", "address", "uint256", "bytes32",  "bytes" ],
+				[ '0x1900', ccip, validity, `0x${namehash}`, response ]
 			)
 		);
 	} catch (e) {

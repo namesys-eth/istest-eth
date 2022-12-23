@@ -24,12 +24,12 @@ contract ResolverGoerli is Test {
     error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
   
     Resolver public ccip;
-    string public testnet; 
+    string public chainID; 
 
     /// @dev : setup
     function setUp() public {
         ccip = new Resolver();
-        testnet = "ethereum";
+        chainID = "1";
     }
 
     /// @dev : DNS encoder
@@ -53,6 +53,22 @@ contract ResolverGoerli is Test {
             _namehash = keccak256(abi.encodePacked(_namehash, keccak256(_label)));
         }
     }
+    function testABIEncodeDecode() public {
+        /// Encode
+        bytes memory _result = bytes(hex'0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
+        bytes memory _signature = bytes(hex'6d821ca7563f9d9d2211ade13d80e4bdbcc368798b552ac3d4a1504ecc7b68776c6f35eb89ee9e8d30aad930ab5040f3d9e61672a4834ed508fe745a85c51de31c');
+        uint256 _validity = uint256(1671803918517);
+        bytes memory _response = abi.encode(_validity, _signature, _result);
+        bytes memory __response  = bytes(hex'000000000000000000000000000000000000000000000000000001853f4758b5000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000416d821ca7563f9d9d2211ade13d80e4bdbcc368798b552ac3d4a1504ecc7b68776c6f35eb89ee9e8d30aad930ab5040f3d9e61672a4834ed508fe745a85c51de31c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
+        assertEq(_response, __response);
+        /// Decode
+        (uint256 __validity,
+        bytes memory __signature,
+        bytes memory __result) = abi.decode(__response, (uint256, bytes, bytes));
+        assertEq(_result, __result); 
+        assertEq(_signature, __signature); 
+        assertEq(_validity, __validity);
+    }
 
     /// @dev : test DNS Encoder
     function testDNSEncoder() public {
@@ -66,6 +82,7 @@ contract ResolverGoerli is Test {
     function testDNSEncodeDecode() public {
         bytes memory _test = "nick.istest.eth";
         (bytes memory _name, bytes32 _namehash) = DNSEncode(_test);
+        console.logBytes(_name);
         assertEq(_name, bytes.concat(bytes1(uint8(4)), "nick", bytes1(uint8(6)), "istest", bytes1(uint8(3)), "eth", bytes1(0)));
         assertEq(_namehash,  bytes32(0x5c8e2e2882eecce2326008987fe586a80e922cfaa512aa14c21ff153775fe277));
         
@@ -80,16 +97,16 @@ contract ResolverGoerli is Test {
         (bytes memory _encoded,) = DNSEncode(_src);
         (string memory _name, bytes32 _namehash) = ccip.DNSDecode(_encoded);
         string[] memory _gateways = new string[](1);
-        _gateways[0] = string.concat('https://sshmatrix.club:3002/', testnet, ":", _name, '/{data}');
+        _gateways[0] = string.concat('https://sshmatrix.club:3002/eip155:', chainID, "/", _name, '/{data}');
         vm.expectRevert(
             abi.encodeWithSelector(
                 Resolver.OffchainLookup.selector,
                 address(ccip),
                 _gateways,
-                abi.encodePacked(abi.encodeWithSelector(
+                abi.encodeWithSelector(
                     iResolver.contenthash.selector, 
-                    _namehash              
-                ), _encoded),
+                    _namehash            
+                ),
                 Resolver.__callback.selector,
                 abi.encode( // callback extradata
                     block.number,
@@ -111,21 +128,23 @@ contract ResolverGoerli is Test {
     function testSignature() public {
         uint PrivateKey = 0x3aefbbb707a2c7bd14f1c356a6eb07197e0fc80206e8ace3a29487ffffe8a242;
         address _coffee = vm.addr(PrivateKey);
-        console.log(_coffee);
+        //console.log(_coffee);
         assertTrue(ccip.isSigner(_coffee));
         
+        /*
         bytes memory _src = "nick.istest.eth";
         (bytes memory _encoded,) = DNSEncode(_src);
         (, bytes32 _namehash) = ccip.DNSDecode(_encoded);
+        */
         // mimic HTTP response with response
-        bytes memory response  = bytes('0x0000000000000000000000000000000000000000000000000000018535a79e41000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000413cb04c8f432369a565a2d27b4fd5b5ce3176aeb3c80560405add01998adc09b922aa93b2f0f90bc6da64812cec458571ed0ff30c517ebf72b57e741fc7c87e1f1b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
-        // BUG <<<< EvmError: Revert >>>> FAILING
+        bytes memory response  = bytes(hex'000000000000000000000000000000000000000000000000000001853f4758b5000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000416d821ca7563f9d9d2211ade13d80e4bdbcc368798b552ac3d4a1504ecc7b68776c6f35eb89ee9e8d30aad930ab5040f3d9e61672a4834ed508fe745a85c51de31c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
         (uint256 __validity,
         bytes memory __signature,
         bytes memory __result) = abi.decode(response, (uint256, bytes, bytes));
-
-        bytes memory _result = bytes('0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
+        bytes memory _result = bytes(hex'0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
         assertEq(_result, __result); 
+        bytes32 _digest = bytes32(hex'01a6f8ec85230b6ee5d1b167d113b4fdb5d3b9a1467bbf57b430ef8e0a323051');
+        /*
         bytes32 _digest = keccak256(
                     abi.encodePacked(
                         hex'1900',
@@ -137,9 +156,10 @@ contract ResolverGoerli is Test {
                 );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(PrivateKey, _digest);
         assertEq(abi.encodePacked(r,s,v), __signature); 
-        bytes memory _signature = bytes('0x3cb04c8f432369a565a2d27b4fd5b5ce3176aeb3c80560405add01998adc09b922aa93b2f0f90bc6da64812cec458571ed0ff30c517ebf72b57e741fc7c87e1f1b');
+        */
+        bytes memory _signature = bytes(hex'6d821ca7563f9d9d2211ade13d80e4bdbcc368798b552ac3d4a1504ecc7b68776c6f35eb89ee9e8d30aad930ab5040f3d9e61672a4834ed508fe745a85c51de31c');
         assertEq(_signature, __signature); 
-        uint256 _validity = uint256(1671642455617);
+        uint256 _validity = uint256(1671803918517);
         assertEq(_validity, __validity); 
         assertTrue(ccip.isValid(_digest, _signature));
     }

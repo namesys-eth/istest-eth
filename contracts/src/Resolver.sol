@@ -8,7 +8,7 @@ pragma solidity > 0.8 .0 < 0.9 .0;
 contract Resolver {
     
     address public Dev;
-    string public testnet = "ethereum"; 
+    string public chainID = "1"; 
 
     /// @dev : Error events
     error RequestError();
@@ -91,8 +91,8 @@ contract Resolver {
         for (uint i; i < len; i++) {
             // random seeding
             k = uint(keccak256(abi.encodePacked(k, _name, msg.sender, blockhash(block.number - 1)))) % gLen; 
-            // Gateway @ URL e.g. https://example.xyz/goerli:alice.eth/{data}
-            urls[i] = string.concat("https://", Gateways[k].domain, "/", testnet, ":", _name, "/{data}"); 
+            // Gateway @ URL e.g. https://example.xyz/eip155:1/alice.eth/{data}
+            urls[i] = string.concat("https://", Gateways[k].domain, "/eip155", ":", chainID, '/', _name, "/{data}"); 
         }
     }
 
@@ -109,8 +109,7 @@ contract Resolver {
             bytes.concat( // custom callData {data} [see ENSIP-10] + encoded name for eth_call by HTTP gateway
                 data[:4],
                 namehash,
-                //data.length > 36 ? data[36: ] : bytes("")
-                encoded   // ensure forward compatibility with future CCIP-Read enabled Resolvers
+                data.length > 36 ? data[36: ] : bytes("")
             ),
             Resolver.__callback.selector, // callback function 
             abi.encode( // callback extradata
