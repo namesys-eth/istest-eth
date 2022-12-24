@@ -52,13 +52,13 @@ app.get('/*', async function (request, response) {
   worker.on("message", res => {
     response.header(setHeader(JSON.parse(res).cache));
     response.status(JSON.parse(res).status);
-    response.json(JSON.parse(res).message).end();
+    response.json({ data: JSON.parse(res).message }).end();
   });
   worker.on("error", error => {
     console.error(error);
     response.header(setHeader(6));
     response.status(405);
-    response.json(abi.encode(["uint256", "bytes", "bytes"], ['405', '0x0', '0x0'])).end(); // 405: INTERNAL_ERROR
+    response.json({ data: abi.encode(["uint256", "bytes", "bytes"], ['405', '0x0', '0x0']) }).end(); // 405: INTERNAL_ERROR
   });
   worker.on("exit", code => {});
 });

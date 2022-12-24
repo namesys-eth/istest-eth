@@ -10,6 +10,14 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 require('dotenv').config();
 
+
+const infura = new ethers.providers.InfuraProvider(
+  "goerli",
+  {
+    projectId: "e27598cddfe84af8aaef15689dd5a556",
+  }
+);
+
 const chains = {
 	"ethereum": [
 		"https://rpc.ankr.com/eth",
@@ -35,21 +43,30 @@ const abi = ethers.utils.defaultAbiCoder;
 
 async function handleCall() {
 
-  let name = 'istest1.eth';
-	let selector = 'bc1c58d1';                                 // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
-	let namehash = ethers.utils.namehash('nick.istest1.eth');  // namehash of 'nick.istest1.eth'
+  let name = 'vitalik.istest1.eth';
+	let selector = 'bc1c58d1';                                   // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
+	let namehash = ethers.utils.namehash(name);                  // namehash of 'nick.istest.eth'
 
   let calldata0 = '0x' + selector;
-  let encoded   = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                      // bytes DNSEncode('nick.istest1.eth')
+  let encoded   = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                        // bytes DNSEncode('nick.istest.eth')
 
-  console.log('       node : ', namehash);
+  console.log('>      node : ', namehash);
+  // console.log('    ALCHEMY ----------')
 	let calldata1 = '0x' + selector + namehash.split('0x')[1];                     // eth_call: Resolver.contenthash(node)
   let calldata2 = '0x' + ensip10 + encoded + selector + namehash.split('0x')[1]; // eth_call: Resolver.resolve(DNSEncoded, (bytes4, node))
 	let resolver  = chain == 'goerli' ? await goerli.getResolver(name) : await mainnet.getResolver(name);
-  //console.log(calldata0);
   console.log('   resolver : ', resolver.address);
-  let content  = await resolver.getContentHash(namehash);
+  let content  = await resolver.getContentHash();
   console.log('contenthash : ', content);
+  console.log('----------------------')
+  // Infura Test
+  // let resolver2 = await infura.getResolver("vitalik.istest.eth");
+  // console.log('    INFURA -----------')
+  // resolver2.getAddress().then(console.log);
+  // resolver2.getContentHash().then(console.log);
+  // console.log('----------------------')
+  // ------
+
 	const res = await fetch(rpc, {
 		body: JSON.stringify({
 			"jsonrpc": "2.0",

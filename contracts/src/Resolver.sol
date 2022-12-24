@@ -24,6 +24,11 @@ contract Resolver {
         bytes extraData
     );
 
+    /// @dev : Interface selector
+    function supportsInterface(bytes4 sig) external pure returns(bool) {
+        return (sig == Resolver.resolve.selector || sig == Resolver.supportsInterface.selector);
+    }
+
     /// @dev : Emitted events
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -153,7 +158,7 @@ contract Resolver {
         /// check signature content
         if (!Resolver(address(this)).isValid(
                 keccak256(
-                    abi.encodePacked(
+                    abi.encode(
                         hex'1900',
                         address(this),
                         _validity,

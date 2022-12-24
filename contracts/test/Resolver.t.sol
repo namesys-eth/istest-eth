@@ -4,16 +4,9 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "src/Resolver.sol";
 
-interface iOverloadResolver {
-    function addr(bytes32 node, uint256 coinType) external view returns(bytes memory);
-}
-
+/// @dev : Interface
 interface iResolver {
     function contenthash(bytes32 node) external view returns(bytes memory);
-    function addr(bytes32 node) external view returns(address payable);
-    function pubkey(bytes32 node) external view returns(bytes32 x, bytes32 y);
-    function text(bytes32 node, string calldata key) external view returns(string memory);
-    function name(bytes32 node) external view returns(string memory);
 }
 
 /**
@@ -53,6 +46,13 @@ contract ResolverGoerli is Test {
             _namehash = keccak256(abi.encodePacked(_namehash, keccak256(_label)));
         }
     }
+
+    /// @dev : test Interface
+    function testURL() public {
+
+    }
+
+    /// @dev : test ABI Encode + Decode
     function testABIEncodeDecode() public {
         /// Encode
         bytes memory _result = bytes(hex'0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002ae5010172002408011220066e20f72cc583d769bc8df5fedff24942b3b8941e827f023d306bdc7aecf5ac00000000000000000000000000000000000000000000');
@@ -74,6 +74,7 @@ contract ResolverGoerli is Test {
     function testDNSEncoder() public {
         bytes memory _src = "nick.eth";
         (bytes memory _name, bytes32 _namehash) = DNSEncode(_src);
+        console.logBytes32(_namehash);
         assertEq(_name, bytes.concat(bytes1(uint8(4)), "nick", bytes1(uint8(3)), "eth", bytes1(0)));
         assertEq(_namehash, bytes32(0x05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00));
     }

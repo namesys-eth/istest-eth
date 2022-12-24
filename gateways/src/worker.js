@@ -33,7 +33,6 @@ const	headers = {
 
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const ensip10 = '0x9061b923';
-const ccip = '0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f';
 const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
 const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
 const abi = ethers.utils.defaultAbiCoder;
@@ -41,7 +40,7 @@ const abi = ethers.utils.defaultAbiCoder;
 async function handleCall(url, env) {
 	const pathname = url;
 	let paths = pathname.toLowerCase().split('/');
-	console.log(paths.length);
+	//console.log(paths.length);
 	if (paths.length != 4) {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['400', '0x', '0x']), // 400: BAD_QUERY
@@ -61,7 +60,7 @@ async function handleCall(url, env) {
 	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = paths[3].split('0x')[1].slice(8,72);  // namehash of 'nick.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
 	let extradata = paths[3].split('0x')[1].slice(72,);  // extradata for resolver.contenthash() =
-	let encoded = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';               // DNSEncode('nick.istest1.eth')
+	let encoded = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                // DNSEncode('nick.istest1.eth')
 	if (selector != 'bc1c58d1') {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
@@ -100,7 +99,7 @@ async function handleCall(url, env) {
 	if (contentType.includes('application/json')) {
 		let data = await res.json();
 		let response = data.result ? data.result.toString() : '0x';
-		let { digest, signature, validity } = await Sign(response, namehash, env);
+		let { digest, signature, validity } = await Sign(resolver.address, response, namehash, env);
 		if (data.error || response === "0x") {
 			return {
 				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),
@@ -122,7 +121,7 @@ async function handleCall(url, env) {
 	}
 };
 
-async function Sign(response, namehash, env) {
+async function Sign(resolver, response, namehash, env) {
 	if (!env.PRIVATE_KEY) {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x', '0x']), // 500: BAD_SIGNATURE
@@ -131,14 +130,14 @@ async function Sign(response, namehash, env) {
 		}
 	}
 
-	let validity = (Date.now() + 10 * 60 * 1000).toString(); // TTL: 10 minutes
+	let validity = (Date.now() + 10 * 60).toString(); 		   										 // TTL: 10 minutes
 	let signer = new ethers.utils.SigningKey(env.PRIVATE_KEY.slice(0, 2) === "0x" ? env.PRIVATE_KEY : "0x" + env.PRIVATE_KEY);
 	let digest;
 	try {
 		digest = ethers.utils.keccak256(
 			abi.encode(
-				[ "string", "address", "uint256", "bytes32",  "bytes" ],
-				[ '0x1900', ccip, validity, `0x${namehash}`, response ]
+				[ "bytes2", "address", "uint256",       "bytes32",  "bytes" ],
+				[ '0x1900',  resolver,  validity, `0x${namehash}`, response ]
 			)
 		);
 	} catch (e) {
