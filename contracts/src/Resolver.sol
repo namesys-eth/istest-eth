@@ -54,6 +54,54 @@ contract Resolver {
         isSigner[0xA610E343BA79d93B39421fD6Bf29067e1aC1Aa66] = true;
     }
 
+    /// LIBRARY
+    /**
+     * @dev concatenate two strings
+     * @param a : encoded byte string
+     * @param b : encoded byte string
+     * @return concatenated string
+     */
+    function add(string memory a, string memory b) internal pure returns (string memory) {
+        return string(abi.encodePacked(a, b));
+    }
+
+    /**
+     * @dev : Split Signature into (r, s, v)
+     * @param signature : encodePacked() signature
+     * @return (v, r, s) split
+     */
+    function splitSignature(bytes memory signature) internal pure returns (uint8, bytes32, bytes32) {
+        require(signature.length == 65, "Signature length != 65");
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            // first 32 bytes, after the length prefix
+            r := mload(add(signature, 32))
+            // second 32 bytes
+            s := mload(add(signature, 64))
+            // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(signature, 96)))
+        }
+        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)
+            revert BadSignature();
+        return (v, r, s);
+    }
+
+    /**
+     * @dev : recover Signer of Signature
+     * @param digesthash : hash of digest
+     * @param signature : encodePacked() signature
+     * @return address of Signer
+     */
+    function recoverSigner(bytes32 digesthash, bytes memory signature) internal pure returns (address) {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        (v, r, s) = splitSignature(signature);
+        return ecrecover(digesthash, v, r, s);
+    }
+
     /**
      * @dev custom DNSDecode() function [see ENSIP-10]
      * @param encoded : encoded byte string
@@ -149,24 +197,25 @@ contract Resolver {
         if (block.number > blocknum + 3 || _hash != keccak256(abi.encodePacked(blockhash(blocknum - 1), namehash, msg.sender)))
             revert InvalidHash();
         /// decode signature
-        (uint256 _validity,
+        (uint64 _validity,
         bytes memory _signature,
-        bytes memory _result) = abi.decode(response, (uint256, bytes, bytes));
+        bytes memory _result) = abi.decode(response, (uint64, bytes, bytes));
         /// check null HTTP response 
         if (bytes1(_result) == bytes1(bytes('0x0'))) revert InvalidResponse();
         /// check signature expiry
         if (block.timestamp > _validity) revert SignatureExpired();
         /// check signature content
+        bytes32 _digest = keccak256(
+            abi.encodePacked(
+                hex'1900',
+                address(this),
+                _validity,
+                namehash,
+                _result
+            )
+        );
         if (!Resolver(address(this)).isValid(
-                keccak256(
-                    abi.encode(
-                        hex'1900',
-                        address(this),
-                        _validity,
-                        namehash,
-                        _result
-                    )
-                ),
+                _digest,
                 _signature
             )) revert InvalidSignature();
         return _result;
@@ -178,22 +227,7 @@ contract Resolver {
      * @param signature : signature to verify
      */
     function isValid(bytes32 digesthash, bytes calldata signature) external view returns(bool) {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        if (signature.length > 64) {
-            r = bytes32(signature[:32]);
-            s = bytes32(signature[32:]);
-            v = uint8(bytes1(signature[64]));
-        } else {
-            r = bytes32(signature[:32]);
-            bytes32 vs = bytes32(signature[32:]);
-            s = vs & bytes32(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
-            v = uint8((uint256(vs) >> 255) + 27);
-        }
-        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)
-            revert BadSignature();
-        address _signer = ecrecover(digesthash, v, r, s);
+        address _signer = recoverSigner(digesthash, signature);
         return (_signer != address(0) && isSigner[_signer]);
     }
 

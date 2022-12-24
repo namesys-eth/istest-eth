@@ -43,14 +43,14 @@ async function handleCall(url, env) {
 	//console.log(paths.length);
 	if (paths.length != 4) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['400', '0x', '0x']), // 400: BAD_QUERY
+			message: abi.encode(["uint64", "bytes", "bytes"], ['400', '0x', '0x']), // 400: BAD_QUERY
 			status: 400,
 			cache: 6
 		}
 	}
 	if (!['1','5'].includes(paths[1].split(':')[1])) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['401', '0x', '0x']), // 401: BAD_GATEWAY
+			message: abi.encode(["uint64", "bytes", "bytes"], ['401', '0x', '0x']), // 401: BAD_GATEWAY
 			status: 401,
 			cache: 6
 		}
@@ -63,7 +63,7 @@ async function handleCall(url, env) {
 	let encoded = '0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001407766974616c696b066973746573740365746800000000000000000000000000';                // DNSEncode('vitalik.istest1.eth')
 	if (selector != 'bc1c58d1') {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
+			message: abi.encode(["uint64", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
 			status: 402,
 			cache: 7
 		}
@@ -102,26 +102,27 @@ async function handleCall(url, env) {
 		let { digest, signature, validity } = await Sign(resolver.address, response, namehash, env);
 		if (data.error) {
 			return {
-				message: abi.encode(["uint256", "bytes", "bytes"], ['405', '0x', '0x']),
+				message: abi.encode(["uint64", "bytes", "bytes"], ['405', '0x', '0x']),
 				status: 405,																													 // 405: BAD_RESULT
 				cache: 6
 			}
 		}
 		if (response === "0x") {
 			return {
-				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),
-				status: 403,																													 // 403: BAD_RESULT
+				message: abi.encode(["uint64", "bytes", "bytes"], ['403', '0x', '0x']),
+				status: 403,																													// 403: BAD_RESULT
 				cache: 6
 			}
 		}
+
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], [validity, signature, response]),
-			status: 200,																														 // 200: SUCCESS
+			message: abi.encode(["uint64", "bytes", "bytes"], [validity, signature, response]),
+			status: 200,																														// 200: SUCCESS
 			cache: 666
 		}
 	} else {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['502', '0x', '0x']), // 502: BAD_HEADER
+			message: abi.encode(["uint64", "bytes", "bytes"], ['502', '0x', '0x']), // 502: BAD_HEADER
 			status: 502,
 			cache: 7
 		}
@@ -131,13 +132,13 @@ async function handleCall(url, env) {
 async function Sign(resolver, response, namehash, env) {
 	if (!env.PRIVATE_KEY) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['500', '0x', '0x']), // 500: BAD_SIGNATURE
+			message: abi.encode(["uint64", "bytes", "bytes"], ['500', '0x', '0x']), // 500: BAD_SIGNATURE
 			status: 500,
 			cache: 6
 		}
 	}
 
-	let validity = ((Date.now() / 1000 | 0) + 10 * 60).toString(); 		   				 // TTL: 10 minutes
+	let validity = ((Date.now() / 1000 | 0) + 10 * 60).toString(); 		   				// TTL: 10 minutes
 	let signer = new ethers.utils.SigningKey(env.PRIVATE_KEY.slice(0, 2) === "0x" ? env.PRIVATE_KEY : "0x" + env.PRIVATE_KEY);
 	let digest;
 	try {
@@ -149,7 +150,7 @@ async function Sign(resolver, response, namehash, env) {
 		);
 	} catch (e) {
 		return {
-			message: abi.encode(["uint256", "bytes", "bytes"], ['406', '0x', '0x']), // 406: BAD_NAMEHASH
+			message: abi.encode(["uint64", "bytes", "bytes"], ['406', '0x', '0x']), // 406: BAD_NAMEHASH
 			status: 406,
 			cache: 6
 		}
@@ -158,10 +159,11 @@ async function Sign(resolver, response, namehash, env) {
 	let signedDigest = await signer.signDigest(ethers.utils.arrayify(digest));
 	const signature = ethers.utils.joinSignature(signedDigest)
 	console.log('------------------')
-	console.log('Response  : ', response);
+	console.log('Result    : ', response);
 	console.log('Signature : ', signature);
 	console.log('Digest    : ', digest);
 	console.log('Validity  : ', validity);
+	console.log('Response  : ', abi.encode(["uint64", "bytes", "bytes"], [validity, signature, response]));
 	console.log('------------------')
 	return { digest, signature, validity }
 }
