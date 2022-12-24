@@ -58,9 +58,9 @@ async function handleCall(url, env) {
 	let chain = chains[paths[1].split(':')[1] == '5' ? 'goerli' : 'ethereum'][0];
 	let name  = paths[2];
 	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
-	let namehash = paths[3].split('0x')[1].slice(8,72);  // namehash of 'nick.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
+	let namehash = paths[3].split('0x')[1].slice(8,72);  // namehash of 'vitalik.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
 	let extradata = paths[3].split('0x')[1].slice(72,);  // extradata for resolver.contenthash() =
-	let encoded = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                // DNSEncode('nick.istest1.eth')
+	let encoded = '0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001407766974616c696b066973746573740365746800000000000000000000000000';                // DNSEncode('vitalik.istest1.eth')
 	if (selector != 'bc1c58d1') {
 		return {
 			message: abi.encode(["uint256", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
@@ -100,7 +100,14 @@ async function handleCall(url, env) {
 		let data = await res.json();
 		let response = data.result ? data.result.toString() : '0x';
 		let { digest, signature, validity } = await Sign(resolver.address, response, namehash, env);
-		if (data.error || response === "0x") {
+		if (data.error) {
+			return {
+				message: abi.encode(["uint256", "bytes", "bytes"], ['405', '0x', '0x']),
+				status: 405,																													 // 405: BAD_RESULT
+				cache: 6
+			}
+		}
+		if (response === "0x") {
 			return {
 				message: abi.encode(["uint256", "bytes", "bytes"], ['403', '0x', '0x']),
 				status: 403,																													 // 403: BAD_RESULT
@@ -130,7 +137,7 @@ async function Sign(resolver, response, namehash, env) {
 		}
 	}
 
-	let validity = (Date.now() + 10 * 60).toString(); 		   										 // TTL: 10 minutes
+	let validity = ((Date.now() / 1000 | 0) + 10 * 60).toString(); 		   				 // TTL: 10 minutes
 	let signer = new ethers.utils.SigningKey(env.PRIVATE_KEY.slice(0, 2) === "0x" ? env.PRIVATE_KEY : "0x" + env.PRIVATE_KEY);
 	let digest;
 	try {

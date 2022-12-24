@@ -12,6 +12,7 @@ contract Resolver {
 
     /// @dev : Error events
     error RequestError();
+    error BadSignature();
     error InvalidSignature();
     error InvalidHash();
     error InvalidResponse();
@@ -148,9 +149,9 @@ contract Resolver {
         if (block.number > blocknum + 3 || _hash != keccak256(abi.encodePacked(blockhash(blocknum - 1), namehash, msg.sender)))
             revert InvalidHash();
         /// decode signature
-        (uint64 _validity,
+        (uint256 _validity,
         bytes memory _signature,
-        bytes memory _result) = abi.decode(response, (uint64, bytes, bytes));
+        bytes memory _result) = abi.decode(response, (uint256, bytes, bytes));
         /// check null HTTP response 
         if (bytes1(_result) == bytes1(bytes('0x0'))) revert InvalidResponse();
         /// check signature expiry
@@ -173,10 +174,10 @@ contract Resolver {
 
     /**
      * @dev checks if a signature is valid
-     * @param hash : hash of signed message
+     * @param digesthash : hash of signed message
      * @param signature : signature to verify
      */
-    function isValid(bytes32 hash, bytes calldata signature) external view returns(bool) {
+    function isValid(bytes32 digesthash, bytes calldata signature) external view returns(bool) {
         bytes32 r;
         bytes32 s;
         uint8 v;
@@ -191,8 +192,8 @@ contract Resolver {
             v = uint8((uint256(vs) >> 255) + 27);
         }
         if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)
-            revert InvalidSignature();
-        address _signer = ecrecover(hash, v, r, s);
+            revert BadSignature();
+        address _signer = ecrecover(digesthash, v, r, s);
         return (_signer != address(0) && isSigner[_signer]);
     }
 

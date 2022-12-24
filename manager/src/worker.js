@@ -36,7 +36,7 @@ const chains = {
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const chain = 'goerli'
 const rpc = chains[chain][0];
-const ensip10 = '0x9061b923';
+const ensip10 = '9061b923';
 const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
 const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
 const abi = ethers.utils.defaultAbiCoder;
@@ -45,35 +45,28 @@ async function handleCall() {
 
   let name = 'vitalik.istest1.eth';
 	let selector = 'bc1c58d1';                                   // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
-	let namehash = ethers.utils.namehash(name);                  // namehash of 'nick.istest.eth'
+	let namehash = ethers.utils.namehash(name);                  // namehash of 'vitalik.istest.eth'
 
   let calldata0 = '0x' + selector;
-  let encoded   = '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000012046e69636b076973746573743103657468000000000000000000000000000000';                        // bytes DNSEncode('nick.istest.eth')
+  let encoded   = '0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001407766974616c696b066973746573740365746800000000000000000000000000';                        // bytes DNSEncode('vitalik.istest.eth')
 
+  console.log('>      name : ', name);
   console.log('>      node : ', namehash);
-  // console.log('    ALCHEMY ----------')
 	let calldata1 = '0x' + selector + namehash.split('0x')[1];                     // eth_call: Resolver.contenthash(node)
   let calldata2 = '0x' + ensip10 + encoded + selector + namehash.split('0x')[1]; // eth_call: Resolver.resolve(DNSEncoded, (bytes4, node))
 	let resolver  = chain == 'goerli' ? await goerli.getResolver(name) : await mainnet.getResolver(name);
   console.log('   resolver : ', resolver.address);
-  let content  = await resolver.getContentHash();
-  console.log('contenthash : ', content);
-  console.log('----------------------')
-  // Infura Test
-  // let resolver2 = await infura.getResolver("vitalik.istest.eth");
-  // console.log('    INFURA -----------')
-  // resolver2.getAddress().then(console.log);
-  // resolver2.getContentHash().then(console.log);
-  // console.log('----------------------')
-  // ------
-
+  //let content  = await resolver.getContentHash();
+  //console.log('contenthash : ', content);
+  
+  let calldata_ = '0xc55a5d59000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000001e000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000018543ca773b000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000415fe58a89f143ab9a39a79b0c6fb9daaf7c237e0b1c278d7f3740f797b24497840969dd1517be76601642d1a858476409bee188ed797ac4c70bf9f1aae2b944e81b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000026e3010170122081e99109634060bae2c1e3f359cda33b2232152b0e010baf6f592a39ca2288500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000007cff4fee6c4522aab0003e8d14cd40a6af439055fd2577951148c14b6cea9a5347583570e035aef437b29886ed22112173b38f7725015ef6d3d5e876b15637f369c4bb'
 	const res = await fetch(rpc, {
 		body: JSON.stringify({
 			"jsonrpc": "2.0",
 			 "method": "eth_call",
 			 "params": [
 				 {
-					 "data": calldata0, //calldata0,1,2
+					 "data": calldata2, //calldata0,1,2
 					 "to": resolver.address
 				 },
 				 "latest"
@@ -95,11 +88,17 @@ async function handleCall() {
 	if (contentType.includes('application/json')) {
 		let data = await res.json();
 		let response = data.result ? data.result.toString() : '0x';
-
-		if (data.error || response === "0x") {
+		if (data.error) {
+      //console.log(data);
+      return {
+				message: data.error.message.toUpperCase(),
+				status: 400
+			}
+		}
+    if (response === "0x") {
       return {
 				message: 'BAD_RESULT',
-				status: 400
+				status: 401
 			}
 		}
     return {
@@ -110,7 +109,7 @@ async function handleCall() {
 	} else {
     return {
       message: 'BAD_RESPONSE',
-      status: 401
+      status: 402
     }
 	}
 };

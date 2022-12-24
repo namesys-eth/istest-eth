@@ -24,11 +24,11 @@ contract IsTestGoerli is Script {
         //require(address(resolver) == istest, "CRITICAL: ADDRESSES NOT MATCHING");
 
         /// @dev : hash of 'istest1.eth' 
-        bytes32 namehash = keccak256(
+        bytes32 namehash2 = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))), keccak256("istest1"))
         );
         /// @dev : set resolver of 'istest1.eth' 
-        ENS.setResolver(namehash, address(resolver));
+        ENS.setResolver(namehash2, address(resolver));
         vm.stopBroadcast();
         resolver;
     }
