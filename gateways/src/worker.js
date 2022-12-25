@@ -103,7 +103,7 @@ async function handleCall(url, env) {
 		if (data.error) {
 			return {
 				message: abi.encode(["uint64", "bytes", "bytes"], ['405', '0x', '0x']),
-				status: 405,																													 // 405: BAD_RESULT
+				status: 405,																													// 405: BAD_RESULT
 				cache: 6
 			}
 		}
