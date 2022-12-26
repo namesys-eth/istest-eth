@@ -1,4 +1,4 @@
-## Instructions for running persistent node service with `systemctl`
+## Persistent node.js service with `systemctl`
 
 ### `service` file
 
@@ -12,4 +12,4 @@ Put `istest.service` in `/etc/systemd/system/`
 
 `journalctl -u istest.service`
 
-FAQ: [https://github.com/natancabral/run-nodejs-on-service-with-systemd-on-linux/](Source)
+FAQ: [Source](https://github.com/natancabral/run-nodejs-on-service-with-systemd-on-linux/)
