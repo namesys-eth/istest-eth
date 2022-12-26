@@ -15,6 +15,7 @@ const require = createRequire(import.meta.url);
 require('dotenv').config();
 const crypto = require("crypto");
 const express = require("express");
+const process = require('process');
 const key = process.env.PRIVATE_KEY;
 const PORT = 3002
 const app = express();
@@ -27,6 +28,7 @@ const options = {
 	 key: fs.readFileSync('/root/.ssl/sshmatrix.club.key'),
 	cert: fs.readFileSync('/root/.ssl/sshmatrix.club.crt')
 };
+const root = '/root/istest';
 const abi = ethers.utils.defaultAbiCoder;
 function setHeader(cache) {
 	return {
@@ -38,12 +40,12 @@ function setHeader(cache) {
 }
 
 app.get('/ping', async function (request, response) {
-	response.end('istest-eth CCIP gateway is running on port ' + PORT + '\n');
+	response.end('istest-eth CCIP gateway is running in ' + root + ' on port ' + PORT + '\n');
 });
 
 app.get('/*', async function (request, response) {
   const env = process.env;
-  const worker = new Worker('./src/worker.js', {
+  const worker = new Worker(root + '/src/worker.js', {
     workerData: {
          url: request.url,
          env: JSON.stringify(env)
@@ -58,10 +60,10 @@ app.get('/*', async function (request, response) {
     console.error(error);
     response.header(setHeader(6));
     response.status(407);                                                     // 407: INTERNAL_ERROR
-    response.json({ data: abi.encode(["uint64", "bytes", "bytes"], ['407', '0x0', '0x0']) }).end();
+    response.json({ data: abi.encode(["uint64", "bytes", "bytes"], ['407', '0x', '0x']) }).end();
   });
   worker.on("exit", code => {});
 });
 
-console.log("istest-eth CCIP gateway is running on port " + PORT);
+console.log('istest-eth CCIP gateway is running in ' + root + ' on port ' + PORT);
 https.createServer(options,app).listen(PORT);
