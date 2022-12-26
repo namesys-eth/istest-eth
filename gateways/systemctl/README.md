@@ -1,15 +1,16 @@
 ## Persistent node.js service with `systemctl`
 
-### `service` file
+### Service file
 
-Put `istest.service` in `/etc/systemd/system/`
+- Put `istest.service` in `/etc/systemd/system/`
 
-### Service `start` | `stop` | `restart`
+### Service Handling
 
-`systemctl {start|stop|restart} istest.service`
+- Start: `systemctl start istest.service`
+- Stop: `systemctl stop istest.service`
 
 ### Verify
 
-`journalctl -u istest.service`
+- `journalctl -u istest.service`
 
 FAQ: [Source](https://github.com/natancabral/run-nodejs-on-service-with-systemd-on-linux/)
