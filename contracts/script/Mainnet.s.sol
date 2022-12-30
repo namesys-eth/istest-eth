@@ -16,18 +16,24 @@ contract IsTestGoerli is Script {
         /// @dev : Generate contract address before deployment
         address deployer = address(msg.sender);
         address istest = deployer.genAddr(vm.getNonce(deployer) + 1);
-        
+
         /// @dev : Deploy
         Resolver resolver = new Resolver();
 
         /// @dev : Check if generated address matches deployed address
-        require(address(resolver) == istest, "CRITICAL: ADDRESSES NOT MATCHING");
-
-        /// @dev : hash of 'istest.eth' 
-        bytes32 namehash = keccak256(
-            abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))), keccak256("istest"))
+        require(
+            address(resolver) == istest,
+            "CRITICAL: ADDRESSES NOT MATCHING"
         );
-        /// @dev : set resolver of 'istest.eth' 
+
+        /// @dev : hash of 'istest.eth'
+        bytes32 namehash = keccak256(
+            abi.encodePacked(
+                keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))),
+                keccak256("istest")
+            )
+        );
+        /// @dev : set resolver of 'istest.eth'
         ENS.setResolver(namehash, address(resolver));
         vm.stopBroadcast();
         resolver;

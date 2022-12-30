@@ -9,6 +9,9 @@ import 'isomorphic-fetch';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 require('dotenv').config();
+const { SigningKey } = require("@ethersproject/signing-key")
+const { keccak256 } = require("@ethersproject/solidity")
+const { defaultAbiCoder } = require("@ethersproject/abi");
 
 const chains = {
 	"ethereum": [
@@ -33,6 +36,7 @@ const	headers = {
 
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const ensip10 = '0x9061b923';
+const CCIP_RESOLVER = "0x02cEaB04AF7fdBEd796b71cf3fA85F761cd319a1";
 const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
 const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
 const abi = ethers.utils.defaultAbiCoder;
@@ -60,8 +64,7 @@ async function handleCall(url, env) {
 	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = paths[3].split('0x')[1].slice(8,72);  // namehash of 'vitalik.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
 	let extradata = paths[3].split('0x')[1].slice(72,);  // extradata for resolver.contenthash() =
-	let encoded = '0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001407766974616c696b066973746573740365746800000000000000000000000000';                // DNSEncode('vitalik.istest1.eth')
-	if (selector != 'bc1c58d1') {
+	if (selector == '') {
 		return {
 			message: abi.encode(["uint64", "bytes", "bytes"], ['402', '0x', '0x']), // 402: BAD_INTERFACE
 			status: 402,
@@ -98,7 +101,7 @@ async function handleCall(url, env) {
 
 	if (contentType.includes('application/json')) {
 		let data = await res.json();
-		let response = data.result ? data.result.toString() : '0x';
+		let response = data.result ? data.result : '0x';
 		let { digest, signature, validity } = await Sign(resolver.address, response, namehash, env);
 		if (data.error) {
 			return {
@@ -138,15 +141,18 @@ async function Sign(resolver, response, namehash, env) {
 		}
 	}
 
-	let validity = ((Date.now() / 1000 | 0) + 10 * 60).toString(); 		   				// TTL: 10 minutes
+	let validity = ((Date.now() / 1000) | 0) + 60	  														// TTL: 60 seconds
+	//let validity = 16724062870 // test
 	let signer = new ethers.utils.SigningKey(env.PRIVATE_KEY.slice(0, 2) === "0x" ? env.PRIVATE_KEY : "0x" + env.PRIVATE_KEY);
 	let digest;
+	//console.log('namehash', `0x${namehash}`); // test
+	//console.log('result', response); // test
+	//console.log('resolver', resolver); // test
+	//console.log('ccip', CCIP_RESOLVER); // test
 	try {
-		digest = ethers.utils.keccak256(
-			abi.encode(
-				[ "bytes2", "address", "uint256",       "bytes32",  "bytes" ],
-				[ '0x1900',  resolver,  validity, `0x${namehash}`, response ]
-			)
+		digest = keccak256(
+				[ "bytes2", "address", "uint64", "bytes32", "bytes" ],
+				[ '0x1900', CCIP_RESOLVER, validity, `0x${namehash}`, response ]
 		);
 	} catch (e) {
 		return {
@@ -155,16 +161,21 @@ async function Sign(resolver, response, namehash, env) {
 			cache: 6
 		}
 	}
+	//console.log('digest', digest); // test
+	let signedDigest = await signer.signDigest(digest);
+	const signature = signedDigest.compact;
+	//console.log('signature', signature); // test
 
-	let signedDigest = await signer.signDigest(ethers.utils.arrayify(digest));
-	const signature = ethers.utils.joinSignature(signedDigest)
 	console.log('------------------')
-	console.log('Result    : ', response);
+	console.log('ETH_CALL  : ', response);
+	console.log('Resolver  : ', resolver);
+	console.log('CCIP      : ', CCIP_RESOLVER);
 	console.log('Signature : ', signature);
 	console.log('Digest    : ', digest);
 	console.log('Validity  : ', validity);
 	console.log('Response  : ', abi.encode(["uint64", "bytes", "bytes"], [validity, signature, response]));
 	console.log('------------------')
+
 	return { digest, signature, validity }
 }
 

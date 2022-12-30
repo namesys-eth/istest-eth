@@ -1,4 +1,5 @@
 hosts
+c0ffee
 
 manager/.env
 manager/node_modules/
@@ -27,6 +28,8 @@ frontend/*/*/.DS_Store
 frontend/*/*/*/.DS_Store
 frontend/*/*/*/*/.DS_Store
 
+contracts/package-lock.json
+contracts/node_modules
 contracts/cache/
 contracts/.env
 contracts/*/.DS_store
