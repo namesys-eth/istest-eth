@@ -36,7 +36,7 @@ const	headers = {
 
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const ensip10 = '0x9061b923';
-const CCIP_RESOLVER = "0x02cEaB04AF7fdBEd796b71cf3fA85F761cd319a1";
+const CCIP_RESOLVER = "0xe72045A9BEaEcd8d644269690aEd0e4846cA4BD4";
 const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
 const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
 const abi = ethers.utils.defaultAbiCoder;

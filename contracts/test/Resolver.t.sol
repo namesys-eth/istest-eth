@@ -28,7 +28,7 @@ contract ResolverGoerli is Test {
     /// @dev : setup
     function setUp() public {
         CCIP = new Resolver();
-        chainID = "1";
+        chainID = "5";
     }
 
     /// @dev : DNS encoder
@@ -227,7 +227,7 @@ contract ResolverGoerli is Test {
                 _ipns
             )
         );
-        uint PrivateKey = 0x3aefbbb707a2c7bd14f1c356a6eb07197e0fc80206e8ace3a29487ffffe8a242;
+        uint PrivateKey = 0x858ead85b72b335b663e4e2235dbe2632df3563a81e8d572f5d96d3e66e6ceb9;
         address _coffee = vm.addr(PrivateKey);
         assertTrue(CCIP.isSigner(_coffee));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(PrivateKey, _digest);
