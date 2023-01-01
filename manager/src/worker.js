@@ -42,7 +42,7 @@ const abi = ethers.utils.defaultAbiCoder;
 
 async function handleCall() {
 
-  let name = 'vitalik.istest1.eth';
+  let name = '00033.eth';
 	let selector = 'bc1c58d1';                                   // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = ethers.utils.namehash(name);                  // namehash of 'vitalik.istest.eth'
 

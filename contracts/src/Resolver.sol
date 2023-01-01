@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 /**
  * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs)
  * @title IsTest CCIP Resolver
+ * @notice GOERLI DEPLOY
  */
 contract Resolver {
     address public Dev;

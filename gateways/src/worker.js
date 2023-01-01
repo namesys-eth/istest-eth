@@ -36,7 +36,7 @@ const	headers = {
 
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const ensip10 = '0x9061b923';
-const CCIP_RESOLVER = "0xe72045A9BEaEcd8d644269690aEd0e4846cA4BD4";
+const CCIP_RESOLVER = process.env.CCIP;
 const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
 const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
 const abi = ethers.utils.defaultAbiCoder;
@@ -59,6 +59,7 @@ async function handleCall(url, env) {
 			cache: 6
 		}
 	}
+	// set chains here
 	let chain = chains[paths[1].split(':')[1] == '5' ? 'goerli' : 'ethereum'][0];
 	let name  = paths[2];
 	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
@@ -72,7 +73,7 @@ async function handleCall(url, env) {
 		}
 	}
 	let calldata = paths[3];
-	let resolver = await mainnet.getResolver(name);
+	let resolver = await goerli.getResolver(name);
 
 	const res = await fetch(chain, {
 		body: JSON.stringify({
@@ -85,7 +86,7 @@ async function handleCall(url, env) {
 				 },
 				 "latest"
 			 ],
-			 "id": 1
+			 "id": Date.now()
 		}),
 		method: 'POST',
 		headers: {
