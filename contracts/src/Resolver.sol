@@ -11,7 +11,7 @@ contract Resolver {
 
     /// @dev : Error events
     error RequestError();
-    error InvalidSignature();
+    error InvalidSignature(string reason);
     error InvalidHash();
     error InvalidResponse();
     error SignatureExpired();
@@ -203,7 +203,7 @@ contract Resolver {
         (uint64 _validity, bytes memory _signature, bytes memory _result) = abi
             .decode(response, (uint64, bytes, bytes));
         /// check null HTTP response
-        if (bytes1(_result) == bytes1(bytes("0x0"))) revert InvalidResponse();
+        // if (bytes1(_result) == bytes1(bytes("0x0"))) revert InvalidResponse();
         /// check signature expiry
         if (block.timestamp > _validity) revert SignatureExpired();
         /// check signature content
@@ -220,7 +220,7 @@ contract Resolver {
                 ),
                 _signature
             )
-        ) revert InvalidSignature();
+        ) revert InvalidSignature("Final_Check_Fail");
         return _result;
     }
 
@@ -233,21 +233,28 @@ contract Resolver {
         bytes32 digest,
         bytes calldata signature
     ) external view returns (bool) {
-        /// First 32 bytes
+        bytes32 s;
+        uint8 v;
         bytes32 r = bytes32(signature[:32]);
-        bytes32 vs = bytes32(signature[32:]);
-        /// Second 32 bytes
-        bytes32 s = vs &
-            bytes32(
-                0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            );
-        /// Final byte
-        uint8 v = uint8((uint256(vs) >> 255) + 27);
+        if (signature.length > 64) {
+            s = bytes32(signature[32:64]);
+            v = uint8(uint256(bytes32(signature[64:])));
+        } else if (signature.length == 64) {
+            bytes32 vs = bytes32(signature[32:]);
+            s =
+                vs &
+                bytes32(
+                    0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                );
+            v = uint8((uint256(vs) >> 255) + 27);
+        } else {
+            revert InvalidSignature("Wrong_Length");
+        }
         /// Check for bad signature
         if (
             uint256(s) >
             0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
-        ) revert InvalidSignature();
+        ) revert InvalidSignature("S_Value_Overflow");
         /// Recover signer
         address _signer = ecrecover(digest, v, r, s);
         return (_signer != address(0) && isSigner[_signer]);

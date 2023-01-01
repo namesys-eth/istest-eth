@@ -216,7 +216,7 @@ contract ResolverGoerli is Test {
         );
         bytes
             memory _ipns = hex"e3010170122081e99109634060bae2c1e3f359cda33b2232152b0e010baf6f592a39ca228850";
-        //? _ipns = abi.encode(_ipns);
+        _ipns = abi.encode(_ipns);
         uint64 _validity = uint64(block.timestamp) + 600;
         bytes32 _digest = keccak256(
             abi.encodePacked(
@@ -231,7 +231,7 @@ contract ResolverGoerli is Test {
         address _coffee = vm.addr(PrivateKey);
         assertTrue(CCIP.isSigner(_coffee));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(PrivateKey, _digest);
-        bytes memory _signature = abi.encodePacked(r, s, v);
+        bytes memory _signature = abi.encode(r, s, v);
         assertTrue(CCIP.isValid(_digest, _signature));
         bytes memory _response = abi.encode(_validity, _signature, _ipns);
         assertEq(_ipns, CCIP.__callback(_response, _extraData));
