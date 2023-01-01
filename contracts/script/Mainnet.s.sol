@@ -3,28 +3,13 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "src/Resolver.sol";
-import "src/Interface.sol";
 
-contract IsTestGoerli is Script {
-    iENS public ENS = iENS(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e);
-
+contract IsTestMainnet is Script {
     function run() external {
         vm.startBroadcast();
 
         /// @dev : Deploy
         Resolver resolver = new Resolver();
-
-        /*
-        /// @dev : hash of 'istest.eth'
-        bytes32 namehash = keccak256(
-            abi.encodePacked(
-                keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))),
-                keccak256("istest")
-            )
-        );
-        /// @dev : set resolver of 'istest.eth'
-        ENS.setResolver(namehash, address(resolver));
-        */
         vm.stopBroadcast();
         resolver;
     }

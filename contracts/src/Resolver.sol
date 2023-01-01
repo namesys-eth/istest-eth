@@ -60,10 +60,10 @@ contract Resolver {
         Gateways.push(
             Gate(
                 "sshmatrix.club:3002",
-                0xDCEfAFB32B6e2Eaa7172B6216ca5973037fE989F
+                0xa4353251b65597F11aCD84a7F2de75aEd9e92F7C
             )
         );
-        isSigner[0xDCEfAFB32B6e2Eaa7172B6216ca5973037fE989F] = true;
+        isSigner[0xa4353251b65597F11aCD84a7F2de75aEd9e92F7C] = true;
     }
 
     /**
@@ -202,8 +202,6 @@ contract Resolver {
         /// decode signature
         (uint64 _validity, bytes memory _signature, bytes memory _result) = abi
             .decode(response, (uint64, bytes, bytes));
-        /// check null HTTP response
-        // if (bytes1(_result) == bytes1(bytes("0x0"))) revert InvalidResponse();
         /// check signature expiry
         if (block.timestamp > _validity) revert SignatureExpired();
         /// check signature content
@@ -220,7 +218,7 @@ contract Resolver {
                 ),
                 _signature
             )
-        ) revert InvalidSignature("Final_Check_Fail");
+        ) revert InvalidSignature("BAD_SIGNATURE");
         return _result;
     }
 
@@ -233,9 +231,12 @@ contract Resolver {
         bytes32 digest,
         bytes calldata signature
     ) external view returns (bool) {
-        bytes32 s;
-        uint8 v;
+        // First 32 bytes of signature
         bytes32 r = bytes32(signature[:32]);
+        // Next 32 bytes of signature
+        bytes32 s;
+        // Last 1 byte
+        uint8 v;
         if (signature.length > 64) {
             s = bytes32(signature[32:64]);
             v = uint8(uint256(bytes32(signature[64:])));
@@ -248,13 +249,13 @@ contract Resolver {
                 );
             v = uint8((uint256(vs) >> 255) + 27);
         } else {
-            revert InvalidSignature("Wrong_Length");
+            revert InvalidSignature("BAD_SIG_LENGTH");
         }
         /// Check for bad signature
         if (
             uint256(s) >
             0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
-        ) revert InvalidSignature("S_Value_Overflow");
+        ) revert InvalidSignature("SIG_OVERFLOW");
         /// Recover signer
         address _signer = ecrecover(digest, v, r, s);
         return (_signer != address(0) && isSigner[_signer]);
