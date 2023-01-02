@@ -1,4 +1,4 @@
-# `istest.eth`
+# `IsTest.eth` Developer Tool
 
 Resolve your testnet ENS on mainnet (or vice-versa) with CCIP-Read.
 
@@ -8,7 +8,7 @@ Resolve your testnet ENS on mainnet (or vice-versa) with CCIP-Read.
 
 # Why `istest.eth`?
 
-We realised the need of testnet → mainnet name resolution when building a subdomain-based community project. For instance, imagine a subdomain membership club built on `vitalik.eth` where subdomain holders can access their membership page at `nick.vitalik.eth` and interact with other members of the club through their subdomain page. Such an architecture will ideally consist of a common default contenthash deployment for all holders, with individual pages accessing the `window.location.href` property of subdomain hosts (i.e. `nick.vitalik.eth`) and rendering content accordingly. Testing such an architecture turned out to be an unecessary challenge since we couldn't resolve testnet contenthashes on ETH.LIMO gateway (since ETH.LIMO only support mainnet). This led to the idea of a testnet → mainnet mapper which would allow us to resolve testnet contenthashes on ETH.LIMO for testing. Similar situation arose in another project where it was necessary to import the rich registry of ENS from mainnet to testnet for appropriate test environment recreation.
+We realised the need of testnet → mainnet name resolution when building a subdomain-based community project. For instance, imagine a subdomain membership club built on `vitalik.eth` where subdomain holders can access their membership page at `nick.vitalik.eth` and interact with other members of the club through their subdomain page. Such an architecture will ideally consist of a common default contenthash deployment for all holders, with individual pages accessing the `window.location.href` property of subdomain hosts (i.e. `nick.vitalik.eth`) and rendering content accordingly. Testing such an architecture turned out to be an unecessary challenge since we couldn't resolve testnet contenthashes on ETH.LIMO gateway (since ETH.LIMO only supports mainnet). This led to the idea of a testnet → mainnet mapper which would allow us to resolve testnet contenthashes on ETH.LIMO for testing. Similar situation arose in another project where it was necessary to import the rich registry of ENS from mainnet to testnet for appropriate test environment recreation.
 
 ## Schema
 
