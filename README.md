@@ -26,9 +26,9 @@ The schematic of the algorithm with Goerli as testnet is shown below:
 
 ## Contracts
 
-Testnet (Mainnet → Goerli): [0x1EA6EFb27f4013D3A16E298a69C869C73CDB3479](https://goerli.etherscan.io/address/0x1EA6EFb27f4013D3A16E298a69C869C73CDB3479#code)
+Testnet (Mainnet → Goerli): [`0x1EA6EFb27f4013D3A16E298a69C869C73CDB3479`](https://goerli.etherscan.io/address/0x1EA6EFb27f4013D3A16E298a69C869C73CDB3479#code)
 
-Mainnet (Goerli → Mainnet): [0x0Db7E56BFE3cbCD7B952F750c303CbF809585C6b](https://etherscan.io/address/0x0Db7E56BFE3cbCD7B952F750c303CbF809585C6b#code)
+Mainnet (Goerli → Mainnet): [`0x0Db7E56BFE3cbCD7B952F750c303CbF809585C6b`](https://etherscan.io/address/0x0Db7E56BFE3cbCD7B952F750c303CbF809585C6b#code)
 
 ## Source Codes
 
