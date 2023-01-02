@@ -1,3 +1,3 @@
 # CCIP Gateway
 
-![](https://raw.githubusercontent.com/bensyc/istest-eth/master/resources/schematic.png)
+CCIP-Read multi-threaded HTTP gateway
