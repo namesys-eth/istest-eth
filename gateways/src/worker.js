@@ -34,11 +34,13 @@ const	headers = {
 	"Access-Control-Allow-Origin": "*"
 };
 
+const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
+const goerli = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI)
+
 // bytes4 of hash of ENSIP-10 'resolve()' identifier
 const ensip10 = '0x9061b923';
-const CCIP_RESOLVER = process.env.CCIP;
-const mainnet = new ethers.providers.AlchemyProvider("homestead", process.env.ALCHEMY_KEY_MAINNET);
-const goerli  = new ethers.providers.AlchemyProvider("goerli", process.env.ALCHEMY_KEY_GOERLI);
+let CCIP_RESOLVER;
+let provider;
 const abi = ethers.utils.defaultAbiCoder;
 
 async function handleCall(url, env) {
@@ -61,6 +63,13 @@ async function handleCall(url, env) {
 	}
 	// set chains here
 	let chain = chains[paths[1].split(':')[1] == '5' ? 'goerli' : 'ethereum'][0];
+	if (paths[1].split(':')[1] === '5') {
+		provider = goerli;
+		CCIP_RESOLVER = process.env.CCIP_GOERLI;
+	} else {
+		provider = mainnet;
+		CCIP_RESOLVER = process.env.CCIP_MAINNET;
+	}
 	let name  = paths[2];
 	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
 	let namehash = paths[3].split('0x')[1].slice(8,72);  // namehash of 'vitalik.eth' = 05a67c0ee82964c4f7394cdd47fee7f4d9503a23c09c38341779ea012afe6e00
@@ -73,7 +82,7 @@ async function handleCall(url, env) {
 		}
 	}
 	let calldata = paths[3];
-	let resolver = await goerli.getResolver(name);
+	let resolver = await provider.getResolver(name);
 
 	const res = await fetch(chain, {
 		body: JSON.stringify({
