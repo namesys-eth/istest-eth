@@ -1,5 +1,9 @@
 hosts
-c0ffee
+
+c0ffee/.env
+c0ffee/node_modules/
+c0ffee/package-lock.json
+c0ffee/.DS_Store
 
 manager/.env
 manager/node_modules/
