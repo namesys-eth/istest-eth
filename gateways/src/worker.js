@@ -65,10 +65,10 @@ async function handleCall(url, env) {
 	let chain = chains[paths[1].split(':')[1] == '5' ? 'goerli' : 'ethereum'][0];
 	if (paths[1].split(':')[1] === '5') {
 		provider = goerli;
-		CCIP_RESOLVER = process.env.CCIP_GOERLI;
+		CCIP_RESOLVER = process.env.CCIP_MAINNET;
 	} else {
 		provider = mainnet;
-		CCIP_RESOLVER = process.env.CCIP_MAINNET;
+		CCIP_RESOLVER = process.env.CCIP_GOERLI;
 	}
 	let name  = paths[2];
 	let selector = paths[3].split('0x')[1].slice(0, 8);  // bytes4 of function to resolve e.g. resolver.contenthash() = bc1c58d1
