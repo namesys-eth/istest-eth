@@ -12,7 +12,7 @@ We realised the need of testnet → mainnet name resolution when building a subd
 
 ## Schema
 
-`istest.eth` CCIP architecture has signtaure verification feature built in, meaning that all responses from the gateway are authenticated by the contract before resolving the requested name. The underlying resolver contract is fully modular, meaning anyone can 'blindly' fork their own version on mainnet and change configurations post hoc according to their needs. A summary of the workstream is as follows:
+`istest.eth` CCIP architecture has signature verification feature built in, meaning that all responses from the gateway are authenticated by the contract before resolving the requested name. The underlying resolver contract is fully modular, meaning anyone can 'blindly' fork their own version on mainnet and change configurations post hoc according to their needs. A summary of the workstream is as follows:
 
 - Client makes a request to resolve `name.istest.eth` on mainnet
 - Resolver initiates a CCIP-Read call to the gateway
