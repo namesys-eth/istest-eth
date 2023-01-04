@@ -26,7 +26,8 @@ app.use(cors({
 }));
 const options = {
 	 key: fs.readFileSync('/root/.ssl/sshmatrix.club.key'),
-	cert: fs.readFileSync('/root/.ssl/sshmatrix.club.crt')
+	cert: fs.readFileSync('/root/.ssl/sshmatrix.club.crt'),
+    ca: fs.readFileSync('/root/.ssl/sshmatrix.club.ca-bundle')
 };
 const root = '/root/istest';
 const abi = ethers.utils.defaultAbiCoder;
