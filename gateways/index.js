@@ -41,6 +41,8 @@ function setHeader(cache) {
 }
 
 app.get('/ping', async function (request, response) {
+  // sends opaque response with error code 200 since in-browser CORS is not enabled
+  // response.header(setHeader(6)); // uncomment this to allow in-browser CORS
 	response.end('istest-eth CCIP gateway is running in ' + root + ' on port ' + PORT + '\n');
 });
 

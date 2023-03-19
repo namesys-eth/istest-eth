@@ -37,5 +37,3 @@ Node.js scripts for running multi-threaded gateways as well as source code for t
 ## Progress
 
 Devs are working on a v2 of this CCIP DevTool that supports multiple .eth TLD gateways (other than ETH.LIMO).
-
-**Please consider support of us to see this project develop.**

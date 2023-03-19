@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>🌐 ISTEST</title>
-    <link type="text/css" rel="stylesheet" href="style.css">
-    <script src="index.js"></script>
-  </head>
-  <body>
-    <div class="header">
-      <h1 style="text-align: center;">ISTEST.eth</h1>
-      <h4 style="text-align: center;">Gateway Checker</h4>
-    </div>
-      <div class="container">
-        <a href="#" class="button" onclick="pingGateway()">🔔 PING CCIP GATEWAY</a>
-        <a href="https://bensyc.github.io/istest-eth/" target="_blank" class="button" onclick="showReadme()">📚 README</a>
-      </div>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>🌐 ISTEST</title>
+  <link type="text/css" rel="stylesheet" href="style.css">
+  <script src="index.js"></script>
+</head>
+
+<body>
+  <div class="header">
+    <h1 style="text-align: center;">ISTEST.eth</h1>
+    <h4 style="text-align: center;">Gateway Checker</h4>
+  </div>
+  <div class="container">
+    <button class="button" id="pingGateway">🔔 PING CCIP GATEWAY</button>
+    <a href="readme.htm?src=https://bensyc.github.io/istest-eth/README.md" target="_blank" class="button" id="showFaq">📚 README</a>
+  </div>
+  <div class="readme" id="mdcontainer">
+  </div>
+</body>
 </html>

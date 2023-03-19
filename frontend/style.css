@@ -16,13 +16,13 @@ body {
 
 .header {
   max-width: 500px;
-  margin: 10% auto;
+  margin: 0% auto;
   padding: 20px;
 }
 
 .container {
   max-width: 500px;
-  margin: -10% auto;
+  margin: 0% auto;
   padding: 20px;
   box-sizing: border-box;
   background-color: #ffffff;
@@ -30,7 +30,15 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.readme {
+  width: 90%;
+  margin: 0% auto;
+  font-weight: 400;
+  letter-spacing: -0.35px;
+}
+
 .button {
+  font-family: 'Spotnik';
   display: block;
   width: 250px;
   margin: 20px auto;
@@ -43,6 +51,7 @@ body {
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
+  border: 0 solid white;
 }
 
 .button:hover {
@@ -55,7 +64,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 15% auto;
+  margin: 2% auto;
   z-index: 999;
 }
 
