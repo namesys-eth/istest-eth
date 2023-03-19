@@ -1,0 +1,98 @@
+@font-face {
+	font-family: 'Spotnik';
+	src: url('Spotnik.woff2') format('woff2');
+}
+
+body {
+  font-family: Spotnik, sans-serif;
+  background-color: #f8f8f8;
+  color: #333333;
+  transition: background-color 0.3s ease;
+  justify-content: center;
+  display: inline;
+  margin: 0 auto;
+  font-weight: 700;
+}
+
+.header {
+  max-width: 500px;
+  margin: 10% auto;
+  padding: 20px;
+}
+
+.container {
+  max-width: 500px;
+  margin: -10% auto;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.button {
+  display: block;
+  width: 250px;
+  margin: 20px auto;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  background-color: #4285f4;
+  color: #ffffff;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #3367d6;
+}
+
+.modal {
+  width: 500px;
+  background-color: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 15% auto;
+  z-index: 999;
+}
+
+.modal-content {
+  max-width: 100%;
+  width: 100%;
+  background-color: #ffffff;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.modal-content.success {
+  background-color: #b8ffc8;
+  color: #155724;
+}
+
+.modal-content.failure {
+  background-color: #fbacb3;
+  color: #721c24;
+}
+
+.close-button {
+  font-family: Spotnik, sans-serif;
+  display: block;
+  width: 100px;
+  margin: 20px auto;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  background-color: #515151;
+  color: #ffffff;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
