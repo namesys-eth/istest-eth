@@ -36,4 +36,4 @@ Node.js scripts for running multi-threaded gateways as well as source code for t
 
 ## Current State
 
-There is currently [a bug in ethers.js](https://github.com/ethers-io/ethers.js/issues/3341) implementation in Node environment which is prohibiting contenthashes from getting mapped. This bug had previously been reported to ricmoo.eth & ETH.LIMO and fixed at that time, but it seems to have reappeared. We are in touch with ETH.LIMO about this issue and expect this to be resolved soon.
+~~There is currently [a bug in ethers.js](https://github.com/ethers-io/ethers.js/issues/3341) implementation in Node environment which is prohibiting contenthashes from getting mapped. This bug had previously been reported to ricmoo.eth & ETH.LIMO and fixed at that time, but it seems to have reappeared. We are in touch with ETH.LIMO about this issue and expect this to be resolved soon.~~
