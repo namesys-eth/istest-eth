@@ -1,5 +1,7 @@
 # `IsTest.eth` Developer Tool
 
+#### author(s): `sshmatrix`, `0xc0de4c0ffee`
+
 Resolve your testnet ENS on mainnet (or vice-versa) with CCIP-Read.
 
 # Description

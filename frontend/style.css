@@ -3,8 +3,13 @@
 	src: url('Spotnik.woff2') format('woff2');
 }
 
+@font-face {
+	font-family: 'SF Mono';
+	src: url('SF-Mono.woff2') format('woff2');
+}
+
 body {
-  font-family: Spotnik, sans-serif;
+  font-family: 'Spotnik', sans-serif;
   background-color: #f8f8f8;
   color: #333333;
   transition: background-color 0.3s ease;
@@ -12,6 +17,10 @@ body {
   display: inline;
   margin: 0 auto;
   font-weight: 700;
+}
+
+pre {
+  font-family: 'SF Mono', monospace;
 }
 
 .header {
@@ -35,6 +44,7 @@ body {
   margin: 0% auto;
   font-weight: 400;
   letter-spacing: -0.35px;
+	margin-bottom: 100px;
 }
 
 .button {
@@ -90,7 +100,7 @@ body {
 }
 
 .close-button {
-  font-family: Spotnik, sans-serif;
+  font-family: 'Spotnik', sans-serif;
   display: block;
   width: 100px;
   margin: 20px auto;
@@ -104,4 +114,3 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
 }
-
