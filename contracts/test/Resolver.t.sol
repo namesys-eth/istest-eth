@@ -11,7 +11,7 @@ interface iResolver {
 
 /**
  * @author 0xc0de4c0ffee, sshmatrix (BeenSick Labs)
- * @title Reolver tester
+ * @title Resolver tester
  */
 contract ResolverGoerli is Test {
     error OffchainLookup(

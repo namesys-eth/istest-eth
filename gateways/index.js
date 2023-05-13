@@ -5,7 +5,7 @@ import {
   workerData
 } from 'worker_threads';
 import { URL } from 'url';
-import { ethers } from 'ethers';
+import { AbiCoder } from 'ethers';
 import 'isomorphic-fetch';
 import { createRequire } from 'module';
 import cors from 'cors';
@@ -30,7 +30,7 @@ const options = {
     ca: fs.readFileSync('/root/.ssl/sshmatrix.club.ca-bundle')
 };
 const root = '/root/istest';
-const abi = ethers.utils.defaultAbiCoder;
+const abi = AbiCoder.defaultAbiCoder();
 function setHeader(cache) {
 	return {
 		'Allow': 'GET',
@@ -62,7 +62,7 @@ app.get('/*', async function (request, response) {
   worker.on("error", error => {
     console.error(error);
     response.header(setHeader(6));
-    response.status(407);                                                     // 407: INTERNAL_ERROR
+    response.status(407); // 407: INTERNAL_ERROR
     response.json({ data: abi.encode(["uint64", "bytes", "bytes"], ['407', '0x', '0x']) }).end();
   });
   worker.on("exit", code => {});

@@ -8,6 +8,7 @@
 
 - Start: `systemctl start istest.service`
 - Stop: `systemctl stop istest.service`
+- Status: `systemctl status istest.service`
 
 ### Verify
 

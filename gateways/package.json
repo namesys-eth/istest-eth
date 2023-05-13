@@ -14,7 +14,7 @@
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/signing-key": "^5.7.0",
     "@ethersproject/solidity": "^5.7.0",
-    "ethers": "^5.7.2",
+    "ethers": "^6.0.0",
     "isomorphic-fetch": "^3.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
