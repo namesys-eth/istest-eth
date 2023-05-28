@@ -18,9 +18,9 @@ function pingGateway() {
     })
     .catch(error => {
       if (error.name === 'TypeError') {
-        showModal('Success', 'CCIP Gateway is alive', 'success');
+        showModal('🥳🎉💯', 'CCIP Gateway is alive', 'success');
       } else {
-        showModal('Error', error.message, 'failure');
+        showModal('❌😬😶', error.message, 'failure');
       }
     });
   }
@@ -45,7 +45,7 @@ function showModal(title, message, type) {
   modalMessage.textContent = message;
 
   const closeButton = document.createElement('button');
-  closeButton.textContent = 'Close';
+  closeButton.textContent = 'Ok, Bye 👋';
   closeButton.classList.add('close-button');
   closeButton.addEventListener('click', () => {
     modal.remove();
