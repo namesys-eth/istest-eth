@@ -25,9 +25,9 @@ app.use(cors({
 	headers: ['Content-Type']
 }));
 const options = {
-	 key: fs.readFileSync('/root/.ssl/sshmatrix.club.key'),
-	cert: fs.readFileSync('/root/.ssl/sshmatrix.club.crt'),
-    ca: fs.readFileSync('/root/.ssl/sshmatrix.club.ca-bundle')
+	 key: fs.readFileSync('/etc/letsencrypt/live/ipfs.namesys.xyz/privkey.pem'),
+	cert: fs.readFileSync('/etc/letsencrypt/live/ipfs.namesys.xyz/cert.pem'),
+    ca: [fs.readFileSync('/etc/letsencrypt/live/ipfs.namesys.xyz/chain.pem')]
 };
 const root = '/root/istest';
 const abi = AbiCoder.defaultAbiCoder();
