@@ -6,7 +6,7 @@ CCIP-Read multi-threaded HTTP gateway
 
 ### Service file
 
-- Put `istest.service.conf` in `/etc/systemd/system/`
+- Put `istest.service` in `/etc/systemd/system/`
 
 ### Service Handling
 
